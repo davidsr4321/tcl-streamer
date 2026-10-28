@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 class HomeActivity : ComponentActivity() {
 
     private lateinit var repository: AppRepository
-    private val content = mutableStateOf<HomeContent?>(null)
+    private val content = mutableStateOf<List<TvApp>?>(null)
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -46,7 +46,7 @@ class HomeActivity : ComponentActivity() {
         setContent {
             // Home is the bottom of the stack: Back has nowhere to go.
             BackHandler {}
-            HomeScreen(content = content.value, onLaunch = ::launch)
+            HomeScreen(apps = content.value, loadShelfArt = repository::loadShelfArt, onLaunch = ::launch)
         }
     }
 

@@ -1,6 +1,8 @@
 package com.tclstreamer.launcher
 
+import android.content.ComponentName
 import android.content.Intent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 
 /** One launchable app, with artwork already scaled down to the size we draw it at. */
@@ -11,12 +13,8 @@ class TvApp(
     val banner: ImageBitmap?,
     /** Square icon, used when there is no banner. */
     val icon: ImageBitmap?,
+    /** A dark wash of the artwork's main colour, painted behind the top shelf. */
+    val tint: Color,
+    val component: ComponentName,
     val launchIntent: Intent,
-)
-
-/** What the home screen shows: one hero app, a streaming row, and everything else. */
-data class HomeContent(
-    val hero: TvApp?,
-    val streaming: List<TvApp>,
-    val others: List<TvApp>,
 )
