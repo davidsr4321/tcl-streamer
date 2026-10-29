@@ -13,9 +13,9 @@ background, and app artwork is scaled down to keep memory low.
 - **Focus:** the tile you are on lifts, casts a soft shadow and catches a glassy highlight. Only that
   tile shows its name.
 - A small clock sits in the top-right corner.
-- **Screensaver:** after a minute without a remote press, the screen dims and a pixel-art ginger cat
-  wanders around, stopping now and then to sit and blink. Any button sends it away. Change the
-  delay with `IDLE_MS` in `HomeActivity.kt`.
+- **Screensaver:** after a minute without a remote press, the screen dims and two pixel-art
+  friends stroll around together, stopping now and then to stand and blink. Any button sends them
+  away. Change the delay with `IDLE_MS` in `HomeActivity.kt`.
 
 ## Get the APK
 

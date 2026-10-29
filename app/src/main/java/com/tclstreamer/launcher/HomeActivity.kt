@@ -31,7 +31,7 @@ class HomeActivity : ComponentActivity() {
 
     /** Bumped on every remote press; the screensaver timer restarts whenever it changes. */
     private val lastInput = mutableIntStateOf(0)
-    private val catAwake = mutableStateOf(false)
+    private val screensaverOn = mutableStateOf(false)
     private val inFront = mutableStateOf(false)
     private var swallowKeyUp = false
 
@@ -67,14 +67,14 @@ class HomeActivity : ComponentActivity() {
                 LaunchedEffect(lastInput.intValue, inFront.value) {
                     if (!inFront.value) return@LaunchedEffect
                     delay(IDLE_MS)
-                    catAwake.value = true
+                    screensaverOn.value = true
                 }
                 AnimatedVisibility(
-                    visible = catAwake.value,
+                    visible = screensaverOn.value,
                     enter = fadeIn(tween(1200)),
                     exit = fadeOut(tween(250)),
                 ) {
-                    CatScreensaver()
+                    PixelPalsScreensaver()
                 }
             }
         }
@@ -88,9 +88,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun onPause() {
-        // Never let the cat run behind another app.
+        // Never let the screensaver run behind another app.
         inFront.value = false
-        catAwake.value = false
+        screensaverOn.value = false
         super.onPause()
     }
 
@@ -101,8 +101,8 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && catAwake.value) {
-            // The first press only shoos the cat away; it never moves focus or opens an app.
+        if (event.action == KeyEvent.ACTION_DOWN && screensaverOn.value) {
+            // The first press only dismisses the screensaver; it never moves focus or opens an app.
             wake()
             swallowKeyUp = true
             return true
@@ -116,7 +116,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun wake() {
-        catAwake.value = false
+        screensaverOn.value = false
         lastInput.intValue++
     }
 
@@ -136,7 +136,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private companion object {
-        /** How long the remote has to sit untouched before the cat comes out. */
+        /** How long the remote has to sit untouched before the screensaver comes out. */
         const val IDLE_MS = 60_000L
     }
 }
