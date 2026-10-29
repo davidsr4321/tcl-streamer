@@ -64,7 +64,9 @@ fun PixelPalsScreensaver() {
     }
 }
 
-private fun DrawScope.drawSprite(sprite: List<String>, left: Float, top: Float, pixel: Float) {
+private fun DrawScope.drawSprite(sprite: List<String>, left: Float, groundTop: Float, pixel: Float) {
+    // Shorter sprites stand on the same ground line as taller ones.
+    val top = groundTop + (SPRITE_H - sprite.size) * pixel
     for (row in sprite.indices) {
         val line = sprite[row]
         for (col in line.indices) {
@@ -114,10 +116,10 @@ private class Stroll(var x: Float, var y: Float) {
 
 /** One character: a standing pose, plus blink and two walking frames built from it. */
 private class Pal(val stand: List<String>) {
-    private val pants = stand[17][2]
+    private val pants = stand[stand.size - 3][2]
     val blink = stand.mapIndexed { i, line -> if (i == EYE_ROW) line.replace('E', 's') else line }
-    val walkA = stand.take(18) + "..$pants$pants$pants...$pants$pants.." + ".KKKK...KK.."
-    val walkB = stand.take(18) + "..$pants$pants...$pants$pants$pants.." + "..KK...KKKK."
+    val walkA = stand.dropLast(2) + "..$pants$pants$pants...$pants$pants.." + ".KKKK...KK.."
+    val walkB = stand.dropLast(2) + "..$pants$pants...$pants$pants$pants.." + "..KK...KKKK."
 }
 
 private val PIXEL = 5.dp
@@ -125,6 +127,7 @@ private val PIXEL = 5.dp
 private val SPEED = 42.dp
 private const val FRAME_MS = 83L
 private const val SPRITE_W = 12
+/** Height of the tallest character. */
 private const val SPRITE_H = 20
 private const val GAP = 2
 private const val GROUP_W = SPRITE_W * 2 + GAP
@@ -136,7 +139,6 @@ private val PALETTE = mapOf(
     'E' to Color(0xFF2A1A12), // eyes
     'K' to Color(0xFF161616), // shoes
     'H' to Color(0xFF2B1D16), // dark hair
-    'G' to Color(0xFF4A3F52), // sunglasses up on the head
     'B' to Color(0xFF3A2418), // dark beard
     'T' to Color(0xFFA98BD8), // lavender tee
     'P' to Color(0xFF2C3340), // dark trousers
@@ -144,17 +146,15 @@ private val PALETTE = mapOf(
     'r' to Color(0xFFF0A060), // curl highlights
     'F' to Color(0xFFC47A58), // freckles
     'b' to Color(0xFFC0602C), // ginger beard
-    'D' to Color(0xFF3A2622), // dark tee
-    'm' to Color(0xFFB0507A), // print on the tee
-    'y' to Color(0xFFC9A040), // print on the tee
+    'D' to Color(0xFF4F7A4A), // green tee
     'J' to Color(0xFF3D4F6E), // jeans
 )
 
-/** Dark hair with sunglasses pushed up, full beard, lavender tee. */
+/** Dark hair, full beard, lavender tee. */
 private val DARK = Pal(
     listOf(
         "...HHHHHH...",
-        "..GGGHHGGG..",
+        "..HHHHHHHH..",
         "..HHHHHHHH..",
         "..HSSSSSSH..",
         "..SESSSSES..",
@@ -176,7 +176,7 @@ private val DARK = Pal(
     )
 )
 
-/** Ginger curls, freckles, ginger beard, dark printed tee. */
+/** Ginger curls, freckles, ginger beard, green tee. A little shorter. */
 private val GINGER = Pal(
     listOf(
         "..r.RR.rR...",
@@ -192,11 +192,9 @@ private val GINGER = Pal(
         "....SSSS....",
         ".DDDDDDDDDD.",
         "DDDDDDDDDDDD",
-        "DDmmDDDyyDDD",
-        "SDmmDDDyyDDS",
+        "SDDDDDDDDDDS",
         "S.DDDDDDDD.S",
         "..JJJJJJJJ..",
-        "..JJJ..JJJ..",
         "..JJJ..JJJ..",
         "..KKK..KKK..",
     )
