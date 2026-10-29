@@ -24,7 +24,8 @@ import kotlin.math.min
 import kotlin.random.Random
 
 /**
- * Two pixel-art friends who stroll around the dimmed screen together while the TV sits idle.
+ * Two pixel-art friends who each wander their own way around the dimmed screen while the TV
+ * sits idle.
  *
  * It runs at 12 frames a second, which suits the pixel look and keeps the weak TV chip cool.
  */
@@ -34,20 +35,22 @@ fun PixelPalsScreensaver() {
         val density = LocalDensity.current
         val pixel = with(density) { PIXEL.toPx() }
         val speed = with(density) { SPEED.toPx() }
-        val maxX = constraints.maxWidth - GROUP_W * pixel
+        val maxX = constraints.maxWidth - SPRITE_W * pixel
         val maxY = constraints.maxHeight - SPRITE_H * pixel
 
-        val pals = remember(maxX, maxY) {
-            Stroll(Random.nextFloat() * maxX, maxY * (0.3f + Random.nextFloat() * 0.6f))
+        val walkers = remember(maxX, maxY) {
+            listOf(DARK, GINGER).map { pal ->
+                Walker(pal, Random.nextFloat() * maxX, maxY * (0.3f + Random.nextFloat() * 0.6f))
+            }
         }
         var frame by remember { mutableIntStateOf(0) }
 
-        LaunchedEffect(pals) {
+        LaunchedEffect(walkers) {
             var last = System.nanoTime()
             while (true) {
                 delay(FRAME_MS)
                 val now = System.nanoTime()
-                pals.update((now - last) / 1e9f, maxX, maxY, speed)
+                walkers.forEach { it.update((now - last) / 1e9f, maxX, maxY, speed) }
                 last = now
                 frame++
             }
@@ -55,11 +58,13 @@ fun PixelPalsScreensaver() {
 
         Canvas(Modifier.fillMaxSize()) {
             frame // redraw on every tick
-            // Snap to the pixel grid so they move in chunky steps, like an old console.
-            val left = floor(pals.x / pixel) * pixel
-            val top = floor(pals.y / pixel) * pixel
-            drawSprite(pals.sprite(DARK, blinkOffset = 0f), left, top, pixel)
-            drawSprite(pals.sprite(GINGER, blinkOffset = 1.4f), left + (SPRITE_W + GAP) * pixel, top, pixel)
+            // Whoever is lower on screen is nearer, so draw them last.
+            walkers.sortedBy { it.y }.forEach { walker ->
+                // Snap to the pixel grid so they move in chunky steps, like an old console.
+                val left = floor(walker.x / pixel) * pixel
+                val top = floor(walker.y / pixel) * pixel
+                drawSprite(walker.sprite(), left, top, pixel)
+            }
         }
     }
 }
@@ -76,13 +81,13 @@ private fun DrawScope.drawSprite(sprite: List<String>, left: Float, groundTop: F
     }
 }
 
-/** Where the pair is headed, and whether they are walking or taking a break. */
-private class Stroll(var x: Float, var y: Float) {
+/** One character's own wandering: where they are headed, and whether they are on a short break. */
+private class Walker(private val pal: Pal, var x: Float, var y: Float) {
     private var targetX = x
     private var targetY = y
-    private var restLeft = 1.5f
+    private var restLeft = Random.nextFloat() * 0.8f
     private var walkClock = 0f
-    private var clock = 0f
+    private var clock = Random.nextFloat() * 3f
 
     fun update(dt: Float, maxX: Float, maxY: Float, speed: Float) {
         clock += dt
@@ -98,7 +103,7 @@ private class Stroll(var x: Float, var y: Float) {
         val dy = targetY - y
         val dist = hypot(dx, dy)
         if (dist < 1f) {
-            restLeft = 2f + Random.nextFloat() * 5f
+            restLeft = 0.4f + Random.nextFloat() * 1.2f
             return
         }
         val step = min(dist, speed * dt)
@@ -107,8 +112,8 @@ private class Stroll(var x: Float, var y: Float) {
         walkClock += dt
     }
 
-    fun sprite(pal: Pal, blinkOffset: Float): List<String> = when {
-        restLeft > 0f -> if ((clock + blinkOffset) % 3.2f < 0.18f) pal.blink else pal.stand
+    fun sprite(): List<String> = when {
+        restLeft > 0f -> if (clock % 3.2f < 0.18f) pal.blink else pal.stand
         (walkClock / 0.18f).toInt() % 2 == 0 -> pal.walkA
         else -> pal.walkB
     }
@@ -129,8 +134,6 @@ private const val FRAME_MS = 83L
 private const val SPRITE_W = 12
 /** Height of the tallest character. */
 private const val SPRITE_H = 20
-private const val GAP = 2
-private const val GROUP_W = SPRITE_W * 2 + GAP
 private const val EYE_ROW = 4
 
 private val PALETTE = mapOf(

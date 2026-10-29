@@ -14,7 +14,7 @@ background, and app artwork is scaled down to keep memory low.
   tile shows its name.
 - A small clock sits in the top-right corner.
 - **Screensaver:** after a minute without a remote press, the screen dims and two pixel-art
-  friends stroll around together, stopping now and then to stand and blink. Any button sends them
+  friends each wander their own way around the screen, pausing only briefly between walks. Any button sends them
   away. Change the delay with `IDLE_MS` in `HomeActivity.kt`.
 
 ## Get the APK
