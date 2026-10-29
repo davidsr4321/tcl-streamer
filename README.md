@@ -6,8 +6,12 @@ background, and app artwork is scaled down to keep memory low.
 
 ## Look
 
-- **Top shelf:** the upper half of the screen shows the artwork of whichever app you are on in the
-  top row, full-bleed and fading into the background, with the app's name in large type.
+- **Top shelf:** the upper part of the screen is a pixel-art scene picked from the colour of the
+  app you are on in the top row: a volcano for red apps (YouTube, Netflix), a desert for orange and
+  yellow, a forest for green, a moonlit sea for blue, a starry night with an aurora for purple
+  (Stremio) and a city at night for grey. The two pixel characters stroll around in it, and the
+  app's name sits on the left in large type. Brand colours for the big apps live in `HUES` in
+  `AppRepository.kt`; any other app gets its colour from its banner.
 - **App grid:** rounded app tiles in rows of five. Your streaming apps fill the top row, with
   Stremio first, then Netflix, YouTube and the rest. Everything else follows by name.
 - **Focus:** the tile you are on lifts, casts a soft shadow and catches a glassy highlight. Only that

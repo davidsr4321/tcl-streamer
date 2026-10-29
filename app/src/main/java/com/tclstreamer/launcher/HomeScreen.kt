@@ -43,7 +43,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -55,10 +55,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -74,7 +72,9 @@ private object Home {
     val TileHeight = 83.dp
     val Gap = 26.dp
     val SideMargin = 56.dp
-    val ShelfHeight = 300.dp
+    /** One pixel of the scene art: 240×75 scene pixels fill the 960×300 dp shelf. */
+    val ScenePixel = 4.dp
+    val ShelfHeight = ScenePixel * SceneArt.H
     /** How far the top row of apps rises into the bottom of the shelf. */
     val DockOverlap = 64.dp
     const val Columns = 5
@@ -84,7 +84,6 @@ private object Home {
 @Composable
 fun HomeScreen(
     apps: List<TvApp>?,
-    loadShelfArt: (TvApp) -> ImageBitmap?,
     onLaunch: (Intent) -> Unit,
 ) {
     Box(Modifier.fillMaxSize().background(Home.Background)) {
@@ -98,7 +97,7 @@ fun HomeScreen(
         if (shelfApp !in apps) shelfApp = apps.first()
 
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-            TopShelf(shelfApp, loadShelfArt)
+            TopShelf(shelfApp)
             Column(
                 modifier = Modifier
                     .offset(y = -Home.DockOverlap)
@@ -131,71 +130,72 @@ fun HomeScreen(
     }
 }
 
-/** Full-bleed artwork for the focused app, fading into the background behind the grid. */
+/**
+ * A pixel-art scene matching the focused app's colour, with the two pixel friends strolling
+ * through it, fading into the background behind the grid.
+ */
 @Composable
-private fun TopShelf(app: TvApp, loadShelfArt: (TvApp) -> ImageBitmap?) {
-    val shelf by produceState<Pair<TvApp, ImageBitmap?>>(app to null, app) {
-        // Skip the decode while focus is still sweeping across the row.
-        delay(140)
-        value = app to withContext(Dispatchers.IO) { loadShelfArt(app) }
-    }
-
-    Crossfade(
-        targetState = shelf,
-        animationSpec = tween(450),
-        modifier = Modifier.fillMaxWidth().height(Home.ShelfHeight),
-        label = "shelf",
-    ) { (shown, art) ->
-        Box(Modifier.fillMaxSize().background(shown.tint)) {
-            if (art != null) {
-                Image(
-                    bitmap = art,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        // A light veil up top keeps the clock readable on bright artwork.
-                        0f to Color.Black.copy(alpha = 0.3f),
-                        0.2f to Color.Transparent,
-                        0.45f to Home.Background.copy(alpha = 0.35f),
-                        1f to Home.Background,
-                    )
+private fun TopShelf(app: TvApp) {
+    Box(Modifier.fillMaxWidth().height(Home.ShelfHeight)) {
+        // Keyed on the scene, so moving between two red apps keeps the same volcano.
+        Crossfade(targetState = app.scene, animationSpec = tween(500), label = "scene") { scene ->
+            Image(
+                bitmap = SceneArt.image(scene),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                filterQuality = FilterQuality.None,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    // A light veil up top keeps the clock readable.
+                    0f to Color.Black.copy(alpha = 0.3f),
+                    0.2f to Color.Transparent,
+                    0.62f to Color.Transparent,
+                    0.85f to Home.Background.copy(alpha = 0.75f),
+                    1f to Home.Background,
                 )
             )
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.horizontalGradient(
-                        0f to Color.Black.copy(alpha = 0.55f),
-                        0.6f to Color.Transparent,
-                    )
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(
+                    0f to Color.Black.copy(alpha = 0.55f),
+                    0.45f to Color.Transparent,
                 )
             )
-            Column(
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = Home.SideMargin, bottom = Home.DockOverlap + 28.dp),
-            ) {
-                BasicText(
-                    shown.label,
-                    style = TextStyle(
-                        color = Home.Text,
-                        fontFamily = Home.Sans,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 34.sp,
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(4.dp))
-                BasicText(
-                    "Press OK to open",
-                    style = TextStyle(color = Home.TextSoft, fontFamily = Home.Sans, fontSize = 13.sp),
-                )
-            }
+        )
+        // They keep to the right of the title, feet on the scene's ground line.
+        PixelPals(
+            modifier = Modifier.fillMaxSize(),
+            pixelSize = Home.ScenePixel,
+            groundY = Home.ScenePixel * SceneArt.GROUND,
+            startPadding = 420.dp,
+            endPadding = Home.SideMargin,
+        )
+        Column(
+            Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = Home.SideMargin, bottom = Home.DockOverlap + 28.dp),
+        ) {
+            BasicText(
+                app.label,
+                style = TextStyle(
+                    color = Home.Text,
+                    fontFamily = Home.Sans,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 34.sp,
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            BasicText(
+                "Press OK to open",
+                style = TextStyle(color = Home.TextSoft, fontFamily = Home.Sans, fontSize = 13.sp),
+            )
         }
     }
 }

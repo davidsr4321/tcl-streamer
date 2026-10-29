@@ -1,6 +1,5 @@
 package com.tclstreamer.launcher
 
-import android.content.ComponentName
 import android.content.Intent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -15,6 +14,7 @@ class TvApp(
     val icon: ImageBitmap?,
     /** A dark wash of the artwork's main colour, painted behind the top shelf. */
     val tint: Color,
-    val component: ComponentName,
+    /** The pixel-art scene behind the top shelf while this app is focused. */
+    val scene: Scene,
     val launchIntent: Intent,
 )

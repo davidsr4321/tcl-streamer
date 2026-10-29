@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toBitmap
@@ -47,17 +46,6 @@ class AppRepository(private val context: Context) {
         return featured + rest
     }
 
-    /**
-     * The banner at full-screen size for the top shelf. Only the focused app's artwork is
-     * ever held at this size, so it is loaded on demand rather than cached.
-     */
-    fun loadShelfArt(app: TvApp): ImageBitmap? = runCatching {
-        val pm = context.packageManager
-        pm.getActivityInfo(app.component, 0).loadBanner(pm)
-            ?.toBitmap(SHELF_W, SHELF_H)
-            ?.asImageBitmap()
-    }.getOrNull()
-
     private fun toTvApp(info: ResolveInfo, category: String): TvApp {
         val pm = context.packageManager
         val activity = info.activityInfo
@@ -74,7 +62,7 @@ class AppRepository(private val context: Context) {
             banner = banner?.asImageBitmap(),
             icon = icon?.asImageBitmap(),
             tint = tintOf(banner ?: icon),
-            component = intent.component!!,
+            scene = sceneForHue(HUES[activity.packageName] ?: accentHue(banner ?: icon)),
             launchIntent = intent,
         )
     }
@@ -89,12 +77,36 @@ class AppRepository(private val context: Context) {
         return Color(ColorUtils.HSLToColor(hsl))
     }
 
+    /**
+     * The hue of the artwork's most vivid colour, or null for grey artwork. Each pixel votes for
+     * its hue in proportion to how saturated and bright it is, so a red logo on a white banner
+     * still reads as red.
+     */
+    private fun accentHue(bitmap: Bitmap?): Float? {
+        if (bitmap == null) return null
+        val small = Bitmap.createScaledBitmap(bitmap, 32, 18, true)
+        val votes = FloatArray(HUE_BINS)
+        val hsv = FloatArray(3)
+        var total = 0f
+        for (y in 0 until small.height) for (x in 0 until small.width) {
+            val pixel = small.getPixel(x, y)
+            if (android.graphics.Color.alpha(pixel) < 128) continue
+            android.graphics.Color.colorToHSV(pixel, hsv)
+            val weight = hsv[1] * hsv[2]
+            if (weight < 0.12f) continue
+            votes[(hsv[0] / 360f * HUE_BINS).toInt().coerceIn(0, HUE_BINS - 1)] += weight
+            total += weight
+        }
+        if (total < 6f) return null
+        val best = votes.indices.maxBy { votes[it] }
+        return (best + 0.5f) * 360f / HUE_BINS
+    }
+
     companion object {
         private const val BANNER_W = 320
         private const val BANNER_H = 180
         private const val ICON_PX = 96
-        private const val SHELF_W = 960
-        private const val SHELF_H = 540
+        private const val HUE_BINS = 24
         private val DEFAULT_TINT = Color(0xFF1C1C22)
 
         /** Streaming apps, in the order they earn a spot in the top row. */
@@ -113,6 +125,23 @@ class AppRepository(private val context: Context) {
             "org.xbmc.kodi",                         // Kodi
             "com.spotify.tv.android",                // Spotify
             "org.videolan.vlc",                      // VLC
+        )
+
+        /** Known brand colours, so the big apps always get the right scene. */
+        private val HUES = mapOf(
+            "com.stremio.one" to 270f,
+            "com.netflix.ninja" to 0f,
+            "com.google.android.youtube.tv" to 0f,
+            "com.liskovsoft.smarttubetv.beta" to 0f,
+            "org.smarttube.stable" to 0f,
+            "com.amazon.amazonvideo.livingroom" to 200f,
+            "com.disney.disneyplus" to 220f,
+            "com.wbd.stream" to 255f,
+            "com.plexapp.android" to 45f,
+            "org.jellyfin.androidtv" to 280f,
+            "org.xbmc.kodi" to 200f,
+            "com.spotify.tv.android" to 140f,
+            "org.videolan.vlc" to 30f,
         )
 
         /** Stock launchers that would only add clutter to the grid. */

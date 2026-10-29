@@ -62,7 +62,7 @@ class HomeActivity : ComponentActivity() {
             // Home is the bottom of the stack: Back has nowhere to go.
             BackHandler {}
             Box {
-                HomeScreen(apps = content.value, loadShelfArt = repository::loadShelfArt, onLaunch = ::launch)
+                HomeScreen(apps = content.value, onLaunch = ::launch)
 
                 LaunchedEffect(lastInput.intValue, inFront.value) {
                     if (!inFront.value) return@LaunchedEffect
