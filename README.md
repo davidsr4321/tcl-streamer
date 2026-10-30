@@ -8,7 +8,7 @@ background, and app artwork is scaled down to keep memory low.
 
 - **Top shelf:** the upper part of the screen is an animated pixel-art scene of the two characters
   doing something different for each app you select: on the couch with popcorn (Stremio), a
-  picnic (Netflix), petting a cat (YouTube), programming (SmartTube, Kodi), hiking (Prime Video),
+  picnic (Netflix), Shir chasing the other two round a tree (YouTube), petting a cat (VLC), programming (SmartTube, Kodi), hiking (Prime Video),
   swimming (Disney+), climbing (Max), reading (Plex) or running (Spotify). Other apps get one
   picked from their name. The sky, or the wall indoors, takes the app's own colour, so no two apps
   look the same. The pairings live in `ACTIVITIES` and the brand colours in `HUES`, both in

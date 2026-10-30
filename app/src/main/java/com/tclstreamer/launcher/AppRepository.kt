@@ -150,7 +150,7 @@ class AppRepository(private val context: Context) {
         private val ACTIVITIES = mapOf(
             "com.stremio.one" to Activity.COUCH,
             "com.netflix.ninja" to Activity.EATING,
-            "com.google.android.youtube.tv" to Activity.CAT,
+            "com.google.android.youtube.tv" to Activity.CHASE,
             "com.liskovsoft.smarttubetv.beta" to Activity.PROGRAMMING,
             "org.smarttube.stable" to Activity.PROGRAMMING,
             "com.amazon.amazonvideo.livingroom" to Activity.HIKING,

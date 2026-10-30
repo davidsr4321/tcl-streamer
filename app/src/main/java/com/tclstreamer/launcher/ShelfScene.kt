@@ -25,12 +25,14 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /** What the two friends get up to in the top shelf while an app is focused. */
-enum class Activity(val asset: String, val indoor: Boolean = false) {
+enum class Activity(val asset: String, val indoor: Boolean = false, val frames: Int = ShelfArt.FRAMES) {
     COUCH("couch", indoor = true),
     EATING("eating"),
     READING("reading", indoor = true),
     PROGRAMMING("programming", indoor = true),
     CAT("cat"),
+    /** Shir chasing the other two round a tree; one lap takes 48 frames. */
+    CHASE("chase", frames = 48),
     HIKING("hiking"),
     RUNNING("running"),
     SWIMMING("swimming"),
@@ -38,8 +40,8 @@ enum class Activity(val asset: String, val indoor: Boolean = false) {
 }
 
 /**
- * The pixel-art activities, drawn by tools/scenes and baked into assets/scenes: each is a 6×4
- * grid of 24 frames of 240×75 pixels, with the sky (or the wall, indoors) left see-through so it
+ * The pixel-art activities, drawn by tools/scenes and baked into assets/scenes: each is a grid
+ * of its frames (usually 24), six to a row, at 240×75 pixels each, with the sky (or the wall, indoors) left see-through so it
  * can be filled with the focused app's own colour.
  */
 object ShelfArt {
@@ -110,7 +112,7 @@ fun ShelfScene(activity: Activity, hue: Float?, ambience: Ambience, modifier: Mo
     }
 
     Canvas(modifier) {
-        val frame = tick % ShelfArt.FRAMES
+        val frame = tick % activity.frames
         val cell = size.height / ShelfArt.H
         sky.forEachIndexed { band, color ->
             drawRect(

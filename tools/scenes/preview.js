@@ -10,7 +10,7 @@ const path = require("path");
   const errs = []; p.on("pageerror", e => errs.push(e.message));
   await p.setContent(`<canvas id=c></canvas><script>${src}</script>`);
   const url = await p.evaluate(() => {
-    const A = ACTIVITIES, S = 3, frames = [0, 6, 12, 18], hues = [270, 0, 200, 140, 30, 220, 45, 255, null];
+    const A = ACTIVITIES, S = 3, frames = [0, 6, 12, 18], hues = [270, 0, 200, 140, 30, 0, 220, 45, 255, null];
     const c = document.getElementById("c");
     c.width = A.W * S * frames.length; c.height = A.H * S * A.LIST.length;
     const ctx = c.getContext("2d");

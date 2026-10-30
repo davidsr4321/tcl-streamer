@@ -8,6 +8,7 @@ const ACTIVITIES = (() => {
     S: "#e9b99a", s: "#cf9a7c", E: "#2a1a12", K: "#161616",
     H: "#2b1d16", B: "#3a2418", T: "#a98bd8", P: "#2c3340",
     R: "#d9783a", r: "#f0a060", F: "#c47a58", b: "#c0602c", D: "#4f7a4a", J: "#3d4f6e",
+    L: "#5a3424", l: "#7a4a30", G: "#c8a868", m: "#c8706a", N: "#1c1c24",
   };
   const pal = (rows, hair, shirt, pants, blinkAt) => ({
     rows, hair, shirt, pants, blinkAt,
@@ -19,6 +20,8 @@ const ACTIVITIES = (() => {
   });
   const DARK = pal(["...HHHHHH...","..HHHHHHHH..","..HHHHHHHH..","..HSSSSSSH..","..SESSSSES..",".sSSSSSSSSs.","..BSSssSSB..","..BBBBBBBB..","..BBBSSBBB..","...BBBBBB...","....SSSS....",".TTTTTTTTTT.","TTTTTTTTTTTT","TTTTTTTTTTTT","STTTTTTTTTTS","S.TTTTTTTT.S","..PPPPPPPP..","..PPP..PPP..","..PPP..PPP..","..KKK..KKK.."], "H", "T", "P", 17);
   const GINGER = pal(["..r.RR.rR...","..RRRRRRRR..",".RRrRRRRrRR.","..RSSSSSSR..","..SESSSSES..",".sSFSSSSFSs.","..bSSssSSb..","..bSbbbbSb..","..bbbSSbbb..","...bbbbbb...","....SSSS....",".DDDDDDDDDD.","DDDDDDDDDDDD","SDDDDDDDDDDS","S.DDDDDDDD.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "R", "D", "J", 7);
+  // Long curly chestnut hair, round gold glasses, black tee, jeans.
+  const SHIR = pal(["...LLLLLL...","..LLlLLlLL..",".LLLLLLLLLL.",".LLSSSSSSLL.",".LGEGSSGEGL.",".LSSSSSSSSL.","LLSSSssSSSLL","LLLSSmmSSLLL","LLL.SSSS.LLL","LLLNNNNNNLLL","LLNNNNNNNNLL","LLNNNNNNNNLL","SLNNNNNNNNLS","S.NNNNNNNN.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "L", "N", "J", 13);
   const SKIN = PALETTE.S;
 
   // ---- Drawing helpers. One canvas unit is one scene pixel. ----
@@ -416,12 +419,66 @@ const ACTIVITIES = (() => {
     if (f >= 4 && f < 12) g.px(206, cy + 20 + (f - 4) * 3, "#8a7a6a");
   };
 
+  // Shir chases the other two round and round a big tree. 48 frames make one lap.
+  A.chase = (g, f) => {
+    const rnd = rng(77);
+    cloud(g, 40, 10, 18); cloud(g, 120, 14, 14); cloud(g, 210, 6, 20);
+    ridge(g, "#2f5a2c", 46, 2, 0.05, 0.8);
+    for (let x = 0; x < W; x += 11) g.disc(x + 5, 47, 5, "#264a24");
+    g.rect(0, 52, W, 23, "#3d6a32");
+    for (let i = 0; i < 70; i++) g.px(Math.floor(rnd() * W), 52 + Math.floor(rnd() * 23), "#4e7e40");
+    for (let i = 0; i < 18; i++) { const x = Math.floor(rnd() * W); g.px(x, 53 + Math.floor(rnd() * 20), ["#f2d23a", "#ffffff", "#e85a6a"][i % 3]); }
+    // A trodden ring of earth round the tree.
+    const cx = 188, rx = 36;
+    for (let a = 0; a < 360; a += 2) { const t = a * Math.PI / 180; g.rect(Math.round(cx + rx * Math.cos(t)) - 1, Math.round(58 + 3 * Math.sin(t)), 4, 1, "#5a4a32"); }
+    const tree = () => {
+      g.rect(cx - 3, 26, 6, 31, "#4a3220"); g.rect(cx - 3, 26, 2, 31, "#5a4028"); g.rect(cx - 5, 55, 10, 2, "#4a3220");
+      g.disc(cx, 20, 15, "#2f5a2c"); g.disc(cx - 8, 15, 8, "#3a6a34"); g.disc(cx + 9, 18, 7, "#3a6a34"); g.disc(cx + 2, 10, 7, "#3f7438");
+      for (const [x, y] of [[cx - 6, 22], [cx + 5, 12], [cx + 10, 24], [cx - 11, 14]]) g.px(x, y, "#e85a6a");
+    };
+    const lap = (f / 48) * Math.PI * 2;
+    const runners = [
+      { p: DARK, a: lap, chased: true },
+      { p: GINGER, a: lap - 0.55, chased: true },
+      { p: SHIR, a: lap - 1.45, chased: false },
+    ].map(r => ({ ...r, depth: Math.sin(r.a) }));
+    const draw = (r) => {
+      const x = Math.round(cx + rx * Math.cos(r.a)) - 6;
+      const feet = Math.round(58 + 3 * Math.sin(r.a));
+      const stride = Math.floor((f + (r.chased ? 0 : 1)) / 2) % 2;
+      const y = feet - r.p.rows.length - (stride ? 0 : 1);
+      // Dust kicked up behind.
+      const dir = -Math.sin(r.a) >= 0 ? 1 : -1;
+      g.px(x + 6 - dir * 7, feet - 1, "rgba(200,180,140,0.6)"); if (stride) g.px(x + 6 - dir * 9, feet - 2, "rgba(200,180,140,0.35)");
+      g.person(r.p, x, y, f % 24, { rows: stride ? r.p.walkB : r.p.walkA, hands: "" });
+      const hy = y + r.p.hand;
+      if (r.chased) {
+        // Hands up in a panic.
+        g.hand(x, hy - 4 + stride); g.hand(x + 11, hy - 3 - stride);
+      } else {
+        // Shir reaches out after them.
+        g.hand(x + 6 + dir * 6, hy - 1); g.hand(x + 6 + dir * 7, hy - 2);
+      }
+      return { x, y };
+    };
+    const behind = runners.filter(r => r.depth < 0).sort((a, b) => a.depth - b.depth);
+    const front = runners.filter(r => r.depth >= 0).sort((a, b) => a.depth - b.depth);
+    const at = new Map();
+    behind.forEach(r => at.set(r.p, draw(r)));
+    tree();
+    front.forEach(r => at.set(r.p, draw(r)));
+    // Ginger keeps glancing back: a little "!" pops up now and then.
+    const gp = at.get(GINGER);
+    if (f % 16 < 6) { g.rect(gp.x + 5, gp.y - 7, 2, 4, "#ffffff"); g.rect(gp.x + 5, gp.y - 2, 2, 1, "#ffffff"); }
+  };
+
   const LIST = [
     { id: "couch", name: "On the couch" },
     { id: "eating", name: "Picnic" },
     { id: "reading", name: "Reading" },
     { id: "programming", name: "Programming" },
     { id: "cat", name: "Petting a cat" },
+    { id: "chase", name: "Chase", frames: 48 },
     { id: "hiking", name: "Hiking" },
     { id: "running", name: "Running" },
     { id: "swimming", name: "Swimming" },
@@ -441,6 +498,7 @@ const ACTIVITIES = (() => {
     skyBands(hue).forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(0, i * 8, W, i === 7 ? H - 56 : 8); });
   }
 
-  return { W, H, FRAMES, LIST, paint: (ctx, id, f) => A[id](kit(ctx), f), drawSky, skyBands };
+  const framesOf = (id) => LIST.find(a => a.id === id)?.frames ?? FRAMES;
+  return { W, H, FRAMES, LIST, framesOf, paint: (ctx, id, f) => A[id](kit(ctx), f), drawSky, skyBands };
 })();
 if (typeof module !== "undefined") module.exports = ACTIVITIES;

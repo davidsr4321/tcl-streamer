@@ -1,4 +1,5 @@
-// Bakes each activity into a 6×4 grid of its 24 frames (1440×300 px) with the sky left
+// Bakes each activity into a grid of its frames, six to a row (1440 px wide, 75 px per row of
+// frames), with the sky left
 // see-through, for the TV app to play back. Usage: node render.js <output dir>
 const { chromium } = require("playwright");
 const fs = require("fs");
@@ -15,9 +16,10 @@ const path = require("path");
     const A = ACTIVITIES;
     return A.LIST.map(a => {
       const c = document.createElement("canvas");
-      c.width = A.W * 6; c.height = A.H * 4;
+      const frames = A.framesOf(a.id);
+      c.width = A.W * 6; c.height = A.H * Math.ceil(frames / 6);
       const ctx = c.getContext("2d");
-      for (let f = 0; f < A.FRAMES; f++) {
+      for (let f = 0; f < frames; f++) {
         ctx.save();
         ctx.translate((f % 6) * A.W, Math.floor(f / 6) * A.H);
         ctx.beginPath(); ctx.rect(0, 0, A.W, A.H); ctx.clip();
