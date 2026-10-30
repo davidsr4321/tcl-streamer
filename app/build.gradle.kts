@@ -12,8 +12,23 @@ android {
         applicationId = "com.tclstreamer.launcher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // Each CI build counts up, so the app can tell when a newer one has been published.
+        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
+        versionName = "1.$versionCode"
+    }
+
+    val sideloadKey = file("dnd.keystore")
+    signingConfigs {
+        // CI writes this from the SIGNING_KEY secret. Signing every build with the same key lets
+        // a new build install over the old one, which self-updates need.
+        if (sideloadKey.exists()) {
+            create("sideload") {
+                storeFile = sideloadKey
+                storePassword = "dndlauncher"
+                keyAlias = "dnd"
+                keyPassword = "dndlauncher"
+            }
+        }
     }
 
     buildTypes {
@@ -22,8 +37,8 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
-            // Signed with the debug key so the release APK installs straight over ADB.
-            signingConfig = signingConfigs.getByName("debug")
+            // Without the shared key it falls back to the debug key, which still installs over ADB.
+            signingConfig = signingConfigs.findByName("sideload") ?: signingConfigs.getByName("debug")
         }
     }
 

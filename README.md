@@ -25,6 +25,36 @@ background, and app artwork is scaled down to keep memory low.
   sparks when the blades meet. Who attacks swaps at random. Any button stops it. Change the delay
   with `IDLE_MS` in `HomeActivity.kt`.
 
+- **Quick settings:** a row of tiles under the apps for Wi-Fi, each HDMI input, a sleep timer and
+  the system settings.
+- **Number keys:** hold 1 to 9 on the remote to open the app in that spot, counting along the rows.
+
+## Updates
+
+D&D checks GitHub every few hours. When there is a newer build, an **Update D&D** tile appears in
+the quick settings row. Press it, then confirm on Android's install screen. This needs:
+
+- The `SIGNING_KEY` repository secret (Settings → Secrets and variables → Actions), holding the
+  base64 of the shared signing key. Without it every build is signed with a different throwaway
+  key and Android refuses to install one over another.
+- Permission for D&D to install apps. If pressing the tile doesn't offer to turn that on, run:
+
+```sh
+adb shell appops set com.tclstreamer.launcher REQUEST_INSTALL_PACKAGES allow
+```
+
+## Sleep timer
+
+Each press of the tile steps through 30, 60, 90 and 120 minutes and then off. To let it turn the
+TV off, make D&D a device admin once:
+
+```sh
+adb shell dpm set-active-admin com.tclstreamer.launcher/.SleepAdmin
+```
+
+Android won't uninstall a device admin. To give the role up (before uninstalling D&D), hold OK on
+the sleep timer tile.
+
 ## Get the APK
 
 Every push builds a signed APK on GitHub Actions. Open the **Actions** tab, pick the latest

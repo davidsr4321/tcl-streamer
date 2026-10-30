@@ -6,3 +6,5 @@ local.properties
 .DS_Store
 captures/
 .kotlin/
+# Restored from the SIGNING_KEY secret in CI; never committed.
+app/dnd.keystore

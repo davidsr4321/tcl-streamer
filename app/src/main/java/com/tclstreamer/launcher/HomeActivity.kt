@@ -4,8 +4,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.tv.TvContract
+import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
+import android.provider.Settings
 import android.view.KeyEvent
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -35,6 +40,14 @@ class HomeActivity : ComponentActivity() {
     private val inFront = mutableStateOf(false)
     private var swallowKeyUp = false
 
+    /** A newer build waiting on GitHub, if any, and whether it is downloading. */
+    private val updateTo = mutableStateOf<Long?>(null)
+    private val updating = mutableStateOf(false)
+    private var lastUpdateCheck = 0L
+    private val hdmi = mutableStateOf<List<Pair<String, String>>>(emptyList())
+    /** Bumped to redraw the sleep timer's minutes left. */
+    private val tick = mutableIntStateOf(0)
+
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             repository.invalidate()
@@ -62,7 +75,14 @@ class HomeActivity : ComponentActivity() {
             // Home is the bottom of the stack: Back has nowhere to go.
             BackHandler {}
             Box {
-                HomeScreen(apps = content.value, onLaunch = ::launch)
+                HomeScreen(apps = content.value, quickTiles = quickTiles(), onLaunch = ::launch)
+
+                LaunchedEffect(inFront.value) {
+                    while (inFront.value) {
+                        delay(30_000)
+                        tick.intValue++
+                    }
+                }
 
                 LaunchedEffect(lastInput.intValue, inFront.value) {
                     if (!inFront.value) return@LaunchedEffect
@@ -85,6 +105,9 @@ class HomeActivity : ComponentActivity() {
         inFront.value = true
         wake()
         refresh()
+        hdmi.value = hdmiInputs(this)
+        tick.intValue++
+        checkForUpdate()
     }
 
     override fun onPause() {
@@ -112,6 +135,13 @@ class HomeActivity : ComponentActivity() {
             return true
         }
         lastInput.intValue++
+        if (event.keyCode in KeyEvent.KEYCODE_1..KeyEvent.KEYCODE_9) {
+            // Holding a number opens that app: 1 is the first tile, 2 the second, and so on.
+            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 1) {
+                content.value?.getOrNull(event.keyCode - KeyEvent.KEYCODE_1)?.let { launch(it.launchIntent) }
+            }
+            return true
+        }
         return super.dispatchKeyEvent(event)
     }
 
@@ -135,8 +165,65 @@ class HomeActivity : ComponentActivity() {
         runCatching { startActivity(intent) }
     }
 
+    private fun quickTiles(): List<QuickTile> = buildList {
+        add(QuickTile("wifi", "Wi-Fi", null, QuickIcons.WIFI) { launch(Intent(Settings.ACTION_WIFI_SETTINGS)) })
+        for ((id, name) in hdmi.value) {
+            add(QuickTile(id, name, "Input", QuickIcons.HDMI) {
+                launch(Intent(Intent.ACTION_VIEW, TvContract.buildChannelUriForPassthroughInput(id)))
+            })
+        }
+        tick.intValue // re-read the minutes left whenever this changes
+        val setUp = SleepTimer.isSetUp(this@HomeActivity)
+        val left = SleepTimer.minutesLeft(this@HomeActivity)
+        val sleepDetail = when {
+            !setUp -> "Needs setup"
+            left == 0 -> "Off"
+            else -> "$left min left"
+        }
+        val release = {
+            SleepTimer.release(this@HomeActivity)
+            tick.intValue++
+        }
+        add(QuickTile("sleep", "Sleep timer", sleepDetail, QuickIcons.MOON, onLongClick = release) {
+            if (setUp) SleepTimer.cycle(this@HomeActivity)
+            tick.intValue++
+        })
+        updateTo.value?.let { build ->
+            val detail = if (updating.value) "Downloading…" else "Build $build"
+            add(QuickTile("update", "Update D&D", detail, QuickIcons.UPDATE, ::startUpdate))
+        }
+        add(QuickTile("settings", "Settings", null, QuickIcons.GEAR) { launch(Intent(Settings.ACTION_SETTINGS)) })
+    }
+
+    private fun checkForUpdate() {
+        val now = SystemClock.elapsedRealtime()
+        if (lastUpdateCheck != 0L && now - lastUpdateCheck < UPDATE_CHECK_MS) return
+        lastUpdateCheck = now
+        lifecycleScope.launch {
+            val latest = Updater.latestVersion() ?: return@launch
+            if (latest > Updater.installedVersion(this@HomeActivity)) updateTo.value = latest
+        }
+    }
+
+    private fun startUpdate() {
+        if (updating.value) return
+        if (!packageManager.canRequestPackageInstalls()) {
+            // Android has to allow D&D to install apps first. On TVs without this screen, the
+            // README has the adb command instead.
+            launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+            return
+        }
+        updating.value = true
+        lifecycleScope.launch {
+            runCatching { Updater.install(this@HomeActivity) }
+                .onFailure { Toast.makeText(this@HomeActivity, "Couldn't download the update", Toast.LENGTH_LONG).show() }
+            updating.value = false
+        }
+    }
+
     private companion object {
         /** How long the remote has to sit untouched before the screensaver comes out. */
         const val IDLE_MS = 60_000L
+        const val UPDATE_CHECK_MS = 3 * 60 * 60 * 1000L
     }
 }

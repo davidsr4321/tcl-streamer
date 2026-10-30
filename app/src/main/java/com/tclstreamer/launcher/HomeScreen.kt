@@ -6,9 +6,11 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +43,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -51,6 +55,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -64,6 +69,7 @@ private object Home {
     val Tile = Color(0xFF1C1C21)
     val Text = Color.White
     val TextSoft = Color(0x99FFFFFF)
+    val Ivory = Color(0xFFF2EDE4)
     val Sans = FontFamily.SansSerif
 
     val TileShape = RoundedCornerShape(12.dp)
@@ -83,6 +89,7 @@ private object Home {
 @Composable
 fun HomeScreen(
     apps: List<TvApp>?,
+    quickTiles: List<QuickTile>,
     onLaunch: (Intent) -> Unit,
 ) {
     Box(Modifier.fillMaxSize().background(Home.Background)) {
@@ -116,6 +123,12 @@ fun HomeScreen(
                                 onLaunch = onLaunch,
                             )
                         }
+                    }
+                }
+                // Wi-Fi, inputs, the sleep timer and settings, since the stock home screen is off.
+                quickTiles.chunked(Home.Columns).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(Home.Gap)) {
+                        row.forEach { tile -> QuickTileView(tile) }
                     }
                 }
             }
@@ -217,6 +230,63 @@ private fun AppTile(
     onFocused: () -> Unit,
     onLaunch: (Intent) -> Unit,
 ) {
+    Tile(app.label, modifier, onFocused, onClick = { onLaunch(app.launchIntent) }) {
+        Artwork(app, Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+private fun QuickTileView(tile: QuickTile) {
+    Tile(tile.label, Modifier, onFocused = {}, onClick = tile.onClick, onLongClick = tile.onLongClick) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(Color(0xFF2A2A31), Home.Tile))),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            PixelIcon(tile.icon, 3.dp)
+            Spacer(Modifier.height(6.dp))
+            BasicText(
+                tile.label,
+                style = TextStyle(color = Home.Text, fontFamily = Home.Sans, fontWeight = FontWeight.SemiBold, fontSize = 12.sp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            tile.detail?.let {
+                BasicText(
+                    it,
+                    style = TextStyle(color = Home.TextSoft, fontFamily = Home.Sans, fontSize = 10.sp),
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PixelIcon(rows: List<String>, pixel: Dp) {
+    Canvas(Modifier.size(pixel * rows[0].length, pixel * rows.size)) {
+        val p = pixel.toPx()
+        rows.forEachIndexed { y, line ->
+            line.forEachIndexed { x, ch ->
+                if (ch == '#') drawRect(Home.Ivory, Offset(x * p, y * p), Size(p, p))
+            }
+        }
+    }
+}
+
+/** A tile that lifts and shows its name while focused. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Tile(
+    label: String,
+    modifier: Modifier,
+    onFocused: () -> Unit,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val scale by animateFloatAsState(if (focused) Home.FocusScale else 1f, tween(200))
@@ -237,9 +307,14 @@ private fun AppTile(
                     clip = true
                 }
                 .onFocusChanged { if (it.isFocused) onFocused() }
-                .clickable(interactionSource = interaction, indication = null) { onLaunch(app.launchIntent) },
+                .combinedClickable(
+                    interactionSource = interaction,
+                    indication = null,
+                    onLongClick = onLongClick,
+                    onClick = onClick,
+                ),
         ) {
-            Artwork(app, Modifier.fillMaxSize())
+            content()
             if (focused) {
                 // The glassy highlight across the top of a lifted tile.
                 Box(
@@ -251,7 +326,7 @@ private fun AppTile(
         }
         Spacer(Modifier.height(12.dp))
         BasicText(
-            app.label,
+            label,
             style = TextStyle(
                 color = labelColor,
                 fontFamily = Home.Sans,

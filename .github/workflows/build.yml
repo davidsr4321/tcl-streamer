@@ -21,6 +21,12 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Restore the signing key
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        if: env.SIGNING_KEY != ''
+        run: echo "$SIGNING_KEY" | base64 -d > app/dnd.keystore
+
       - name: Build release APK
         run: ./gradlew --no-daemon assembleRelease
 
@@ -33,7 +39,9 @@ jobs:
       # https://github.com/davidsr4321/tcl-streamer/releases/download/latest/noir.apk
       - name: Copy APK for the download link
         if: github.event_name == 'push'
-        run: cp app/build/outputs/apk/release/app-release.apk noir.apk
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk noir.apk
+          echo "${{ github.run_number }}" > version.txt
 
       - name: Publish the download link
         if: github.event_name == 'push'
@@ -42,4 +50,6 @@ jobs:
           tag_name: latest
           name: Latest build
           prerelease: true
-          files: noir.apk
+          files: |
+            noir.apk
+            version.txt
