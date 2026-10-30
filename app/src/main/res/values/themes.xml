@@ -1,7 +1,7 @@
 <resources>
-    <style name="Theme.Noir" parent="@android:style/Theme.Material.NoActionBar.Fullscreen">
-        <item name="android:windowBackground">@color/noir_ink</item>
-        <item name="android:colorBackground">@color/noir_ink</item>
+    <style name="Theme.DnD" parent="@android:style/Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/ink</item>
+        <item name="android:colorBackground">@color/ink</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowAnimationStyle">@null</item>
     </style>

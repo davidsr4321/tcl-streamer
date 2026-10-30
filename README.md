@@ -1,6 +1,6 @@
-# Noir — a quiet launcher for the TCL TV
+# D&D — a pixel-art launcher for the TCL TV
 
-Noir is a minimal Android TV home screen built for a TCL 43S51B (Android TV 11, 1 GB RAM), laid out
+D&D is a minimal Android TV home screen built for a TCL 43S51B (Android TV 11, 1 GB RAM), laid out
 in the spirit of the Apple TV home screen. There are no ads or recommendations, nothing loads in the
 background, and app artwork is scaled down to keep memory low.
 
@@ -17,9 +17,12 @@ background, and app artwork is scaled down to keep memory low.
 - **Focus:** the tile you are on lifts, casts a soft shadow and catches a glassy highlight. Only that
   tile shows its name.
 - A small clock sits in the top-right corner.
-- **Screensaver:** after a minute without a remote press, the screen dims and two pixel-art
-  friends each wander their own way around the screen, pausing only briefly between walks. Any button sends them
-  away. Change the delay with `IDLE_MS` in `HomeActivity.kt`.
+- **Title:** "D&D" in pixel letters, centred just above the row of apps.
+- **Screensaver:** after a minute without a remote press, the screen dims and the two pixel
+  characters have a sword fight: salutes, clashes, thrust and parry, overhead chops, jump attacks,
+  low sweeps, spin slashes, flurries, disarms, knockbacks, dodge rolls, knockdowns and feints, with
+  sparks when the blades meet. Who attacks swaps at random. Any button stops it. Change the delay
+  with `IDLE_MS` in `HomeActivity.kt`.
 
 ## Get the APK
 
@@ -50,12 +53,12 @@ https://github.com/davidsr4321/tcl-streamer/releases/download/latest/noir.apk
    adb install -r app-release.apk
    ```
 
-4. Noir now appears in the TV's app list. Press Home and pick Noir if the TV asks which home app to use.
+4. D&D now appears in the TV's app list. Press Home and pick D&D if the TV asks which home app to use.
 
-### Make Noir the home screen
+### Make D&D the home screen
 
 Android TV 11 on TCL often skips the "choose a home app" prompt and always opens the stock launcher.
-If that happens, disable the stock launcher so Home goes to Noir:
+If that happens, disable the stock launcher so Home goes to D&D:
 
 ```sh
 adb shell pm disable-user --user 0 com.google.android.tvlauncher
@@ -67,7 +70,7 @@ To undo it at any time:
 adb shell pm enable com.google.android.tvlauncher
 ```
 
-Keep Noir installed while the stock launcher is disabled, or the TV will have no home screen.
+Keep D&D installed while the stock launcher is disabled, or the TV will have no home screen.
 
 ## Change which apps are featured
 

@@ -74,7 +74,7 @@ class HomeActivity : ComponentActivity() {
                     enter = fadeIn(tween(1200)),
                     exit = fadeOut(tween(250)),
                 ) {
-                    PixelPalsScreensaver()
+                    SwordFightScreensaver()
                 }
             }
         }

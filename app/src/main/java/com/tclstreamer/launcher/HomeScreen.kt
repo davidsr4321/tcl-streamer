@@ -167,12 +167,18 @@ private fun TopShelf(app: TvApp) {
                 )
             )
         )
-        // They keep to the right of the title, feet on the scene's ground line.
+        // The launcher's name, centred just above the row of apps.
+        PixelWordmark(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = Home.DockOverlap + 16.dp),
+        )
+        // They keep to the right of the app name and the wordmark, feet on the scene's ground line.
         PixelPals(
             modifier = Modifier.fillMaxSize(),
             pixelSize = Home.ScenePixel,
             groundY = Home.ScenePixel * SceneArt.GROUND,
-            startPadding = 420.dp,
+            startPadding = 560.dp,
             endPadding = Home.SideMargin,
         )
         Column(

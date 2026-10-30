@@ -1,8 +1,6 @@
 package com.tclstreamer.launcher
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -25,14 +23,6 @@ import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.random.Random
-
-/** The two pixel-art friends wandering the dimmed screen while the TV sits idle. */
-@Composable
-fun PixelPalsScreensaver() {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.72f))) {
-        PixelPals(Modifier.fillMaxSize(), pixelSize = 5.dp)
-    }
-}
 
 /**
  * The two friends, each wandering their own way around this box.
@@ -101,7 +91,7 @@ private data class Bounds(val minX: Float, val maxX: Float, val minY: Float, val
     fun randomY() = minY + Random.nextFloat() * (maxY - minY)
 }
 
-private fun DrawScope.drawSprite(sprite: List<String>, left: Float, groundTop: Float, pixel: Float) {
+internal fun DrawScope.drawSprite(sprite: List<String>, left: Float, groundTop: Float, pixel: Float) {
     // Shorter sprites stand on the same ground line as taller ones.
     val top = groundTop + (SPRITE_H - sprite.size) * pixel
     for (row in sprite.indices) {
@@ -154,22 +144,26 @@ private class Walker(private val pal: Pal, start: Bounds) {
 }
 
 /** One character: a standing pose, plus blink and two walking frames built from it. */
-private class Pal(val stand: List<String>) {
+internal class Pal(val stand: List<String>) {
     private val pants = stand[stand.size - 3][2]
     val blink = stand.mapIndexed { i, line -> if (i == EYE_ROW) line.replace('E', 's') else line }
     val walkA = stand.dropLast(2) + "..$pants$pants$pants...$pants$pants.." + ".KKKK...KK.."
     val walkB = stand.dropLast(2) + "..$pants$pants...$pants$pants$pants.." + "..KK...KKKK."
+    /** Knees bent: the legs fold away and the body sits on the shoes. */
+    val crouch = stand.dropLast(3) + stand.last()
+    /** The row with the hands, where a sword is held. */
+    val handRow = stand.indices.first { it >= 10 && stand[it][0] == 'S' }
 }
 
 /** Walking speed, in dp per second. */
 private val SPEED = 42.dp
-private const val FRAME_MS = 83L
-private const val SPRITE_W = 12
+internal const val FRAME_MS = 83L
+internal const val SPRITE_W = 12
 /** Height of the tallest character. */
-private const val SPRITE_H = 20
+internal const val SPRITE_H = 20
 private const val EYE_ROW = 4
 
-private val PALETTE = mapOf(
+internal val PALETTE = mapOf(
     'S' to Color(0xFFE9B99A), // skin
     's' to Color(0xFFCF9A7C), // skin shade
     'E' to Color(0xFF2A1A12), // eyes
@@ -187,7 +181,7 @@ private val PALETTE = mapOf(
 )
 
 /** Dark hair, full beard, lavender tee. */
-private val DARK = Pal(
+internal val DARK = Pal(
     listOf(
         "...HHHHHH...",
         "..HHHHHHHH..",
@@ -213,7 +207,7 @@ private val DARK = Pal(
 )
 
 /** Ginger curls, freckles, ginger beard, green tee. A little shorter. */
-private val GINGER = Pal(
+internal val GINGER = Pal(
     listOf(
         "..r.RR.rR...",
         "..RRRRRRRR..",
