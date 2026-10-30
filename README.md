@@ -6,12 +6,13 @@ background, and app artwork is scaled down to keep memory low.
 
 ## Look
 
-- **Top shelf:** the upper part of the screen is a pixel-art scene picked from the colour of the
-  app you are on in the top row: a volcano for red apps (YouTube, Netflix), a desert for orange and
-  yellow, a forest for green, a moonlit sea for blue, a starry night with an aurora for purple
-  (Stremio) and a city at night for grey. The two pixel characters stroll around in it, and the
-  app's name sits on the left in large type. Brand colours for the big apps live in `HUES` in
-  `AppRepository.kt`; any other app gets its colour from its banner.
+- **Top shelf:** the upper part of the screen is an animated pixel-art scene of the two characters
+  doing something different for each app you select: on the couch with popcorn (Stremio), a
+  picnic (Netflix), petting a cat (YouTube), programming (SmartTube, Kodi), hiking (Prime Video),
+  swimming (Disney+), climbing (Max), reading (Plex) or running (Spotify). Other apps get one
+  picked from their name. The sky, or the wall indoors, takes the app's own colour, so no two apps
+  look the same. The pairings live in `ACTIVITIES` and the brand colours in `HUES`, both in
+  `AppRepository.kt`. The app's name sits on the left in large type.
 - **App grid:** rounded app tiles in rows of five. Your streaming apps fill the top row, with
   Stremio first, then Netflix, YouTube and the rest. Everything else follows by name.
 - **Focus:** the tile you are on lifts, casts a soft shadow and catches a glassy highlight. Only that
@@ -77,3 +78,10 @@ Keep D&D installed while the stock launcher is disabled, or the TV will have no 
 The order of the streaming row lives in `FEATURED` in
 `app/src/main/java/com/tclstreamer/launcher/AppRepository.kt`. The first installed app on that
 list takes the first spot in the top row.
+
+## Redrawing the scenes
+
+The scenes are drawn in `tools/scenes/activities.js` and baked into the PNG sheets in
+`app/src/main/assets/scenes`. After changing them, run `node tools/scenes/render.js
+app/src/main/assets/scenes` (it needs Playwright). `node tools/scenes/preview.js sheet.png`
+draws every scene at a few frames on one image, for checking by eye.

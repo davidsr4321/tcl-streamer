@@ -43,7 +43,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -74,7 +73,7 @@ private object Home {
     val SideMargin = 56.dp
     /** One pixel of the scene art: 240×75 scene pixels fill the 960×300 dp shelf. */
     val ScenePixel = 4.dp
-    val ShelfHeight = ScenePixel * SceneArt.H
+    val ShelfHeight = ScenePixel * ShelfArt.H
     /** How far the top row of apps rises into the bottom of the shelf. */
     val DockOverlap = 64.dp
     const val Columns = 5
@@ -92,7 +91,7 @@ fun HomeScreen(
         val scroll = rememberScrollState()
         val scope = rememberCoroutineScope()
         val firstFocus = remember { FocusRequester() }
-        // The top shelf follows focus along the top row and stays put below it.
+        // The top shelf follows focus to whichever app is selected.
         var shelfApp by remember { mutableStateOf(apps.first()) }
         if (shelfApp !in apps) shelfApp = apps.first()
 
@@ -111,10 +110,8 @@ fun HomeScreen(
                                 app = app,
                                 modifier = if (app === apps.first()) Modifier.focusRequester(firstFocus) else Modifier,
                                 onFocused = {
-                                    if (rowIndex == 0) {
-                                        shelfApp = app
-                                        scope.launch { scroll.animateScrollTo(0) }
-                                    }
+                                    shelfApp = app
+                                    if (rowIndex == 0) scope.launch { scroll.animateScrollTo(0) }
                                 },
                                 onLaunch = onLaunch,
                             )
@@ -131,21 +128,14 @@ fun HomeScreen(
 }
 
 /**
- * A pixel-art scene matching the focused app's colour, with the two pixel friends strolling
- * through it, fading into the background behind the grid.
+ * The focused app's own pixel-art scene, with the two friends busy at its activity under a sky
+ * of the app's colour, fading into the background behind the grid.
  */
 @Composable
 private fun TopShelf(app: TvApp) {
     Box(Modifier.fillMaxWidth().height(Home.ShelfHeight)) {
-        // Keyed on the scene, so moving between two red apps keeps the same volcano.
-        Crossfade(targetState = app.scene, animationSpec = tween(500), label = "scene") { scene ->
-            Image(
-                bitmap = SceneArt.image(scene),
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-                filterQuality = FilterQuality.None,
-                modifier = Modifier.fillMaxSize(),
-            )
+        Crossfade(targetState = app, animationSpec = tween(500), label = "scene") { shown ->
+            ShelfScene(shown.activity, shown.hue, Modifier.fillMaxSize())
         }
         Box(
             Modifier.fillMaxSize().background(
@@ -172,14 +162,6 @@ private fun TopShelf(app: TvApp) {
             Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = Home.DockOverlap + 16.dp),
-        )
-        // They keep to the right of the app name and the wordmark, feet on the scene's ground line.
-        PixelPals(
-            modifier = Modifier.fillMaxSize(),
-            pixelSize = Home.ScenePixel,
-            groundY = Home.ScenePixel * SceneArt.GROUND,
-            startPadding = 560.dp,
-            endPadding = Home.SideMargin,
         )
         Column(
             Modifier

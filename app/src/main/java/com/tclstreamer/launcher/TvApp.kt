@@ -14,7 +14,9 @@ class TvApp(
     val icon: ImageBitmap?,
     /** A dark wash of the artwork's main colour, painted behind the top shelf. */
     val tint: Color,
-    /** The pixel-art scene behind the top shelf while this app is focused. */
-    val scene: Scene,
+    /** The app's main hue, which colours the sky of its top-shelf scene. Null for grey artwork. */
+    val hue: Float?,
+    /** What the two friends do in the top shelf while this app is focused. */
+    val activity: Activity,
     val launchIntent: Intent,
 )

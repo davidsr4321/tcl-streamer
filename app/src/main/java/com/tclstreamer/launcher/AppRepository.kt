@@ -62,7 +62,9 @@ class AppRepository(private val context: Context) {
             banner = banner?.asImageBitmap(),
             icon = icon?.asImageBitmap(),
             tint = tintOf(banner ?: icon),
-            scene = sceneForHue(HUES[activity.packageName] ?: accentHue(banner ?: icon)),
+            hue = HUES[activity.packageName] ?: accentHue(banner ?: icon),
+            activity = ACTIVITIES[activity.packageName]
+                ?: Activity.entries[Math.floorMod(activity.packageName.hashCode(), Activity.entries.size)],
             launchIntent = intent,
         )
     }
@@ -127,7 +129,7 @@ class AppRepository(private val context: Context) {
             "org.videolan.vlc",                      // VLC
         )
 
-        /** Known brand colours, so the big apps always get the right scene. */
+        /** Known brand colours, so the big apps always get the right sky. */
         private val HUES = mapOf(
             "com.stremio.one" to 270f,
             "com.netflix.ninja" to 0f,
@@ -142,6 +144,24 @@ class AppRepository(private val context: Context) {
             "org.xbmc.kodi" to 200f,
             "com.spotify.tv.android" to 140f,
             "org.videolan.vlc" to 30f,
+        )
+
+        /** A fitting pastime for the big apps. Everything else gets one picked from its name. */
+        private val ACTIVITIES = mapOf(
+            "com.stremio.one" to Activity.COUCH,
+            "com.netflix.ninja" to Activity.EATING,
+            "com.google.android.youtube.tv" to Activity.CAT,
+            "com.liskovsoft.smarttubetv.beta" to Activity.PROGRAMMING,
+            "org.smarttube.stable" to Activity.PROGRAMMING,
+            "com.amazon.amazonvideo.livingroom" to Activity.HIKING,
+            "com.disney.disneyplus" to Activity.SWIMMING,
+            "com.wbd.stream" to Activity.CLIMBING,
+            "com.apple.atve.androidtv.appletv" to Activity.COUCH,
+            "com.plexapp.android" to Activity.READING,
+            "org.jellyfin.androidtv" to Activity.READING,
+            "org.xbmc.kodi" to Activity.PROGRAMMING,
+            "com.spotify.tv.android" to Activity.RUNNING,
+            "org.videolan.vlc" to Activity.CAT,
         )
 
         /** Stock launchers that would only add clutter to the grid. */
