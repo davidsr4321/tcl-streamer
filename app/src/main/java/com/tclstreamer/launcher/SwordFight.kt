@@ -236,7 +236,7 @@ private val MOVES = listOf(
         ),
         clangs = listOf(0.43f),
         dust = listOf(0.55f),
-        looseSword = Track(0f to p(dx = 22f, dy = 1f, sword = 0f)),
+        looseSword = Track(0f to p(dx = 28f, dy = 1f, sword = 0f)),
         looseFrom = 0.55f,
         looseUntil = 1.9f,
     ),
@@ -310,8 +310,8 @@ private class Stage(
     }
 
     fun draw(duel: Duel) {
-        val left = Placed(DARK, duel.left(), centerX - 15 + duel.left().dx.roundToInt(), facing = 1)
-        val right = Placed(GINGER, duel.right(), centerX + 3 - duel.right().dx.roundToInt(), facing = -1)
+        val left = Placed(DARK, duel.left(), centerX - 19 + duel.left().dx.roundToInt(), facing = 1)
+        val right = Placed(GINGER, duel.right(), centerX + 7 - duel.right().dx.roundToInt(), facing = -1)
         val fighters = listOf(left, right)
 
         fighters.forEach { shadow(it) }
