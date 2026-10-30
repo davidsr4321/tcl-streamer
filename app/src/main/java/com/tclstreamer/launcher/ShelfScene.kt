@@ -25,11 +25,11 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /** What the two friends get up to in the top shelf while an app is focused. */
-enum class Activity(val asset: String) {
-    COUCH("couch"),
+enum class Activity(val asset: String, val indoor: Boolean = false) {
+    COUCH("couch", indoor = true),
     EATING("eating"),
-    READING("reading"),
-    PROGRAMMING("programming"),
+    READING("reading", indoor = true),
+    PROGRAMMING("programming", indoor = true),
     CAT("cat"),
     HIKING("hiking"),
     RUNNING("running"),
@@ -49,6 +49,8 @@ object ShelfArt {
     private const val COLUMNS = 6
     private const val BAND_ROWS = 8
     private val BAND_VALUES = floatArrayOf(0.10f, 0.13f, 0.17f, 0.21f, 0.26f, 0.31f, 0.37f, 0.43f)
+    private val DAY_VALUES = floatArrayOf(0.30f, 0.34f, 0.38f, 0.43f, 0.48f, 0.53f, 0.58f, 0.63f)
+    private val NIGHT_VALUES = floatArrayOf(0.05f, 0.06f, 0.075f, 0.09f, 0.11f, 0.13f, 0.15f, 0.17f)
 
     // A decoded sheet is 1.7 MB, so only the few most recently shown are kept.
     private val cache = object : LinkedHashMap<Activity, ImageBitmap>(4, 0.75f, true) {
@@ -68,32 +70,47 @@ object ShelfArt {
 
     fun frameOffset(frame: Int) = IntOffset((frame % COLUMNS) * W, (frame / COLUMNS) * H)
 
-    /** Eight bands of the app's hue, darkest at the top. Grey apps get a nearly grey sky. */
-    fun sky(hue: Float?): List<Color> = BAND_VALUES.map { v ->
-        Color.hsv(hue ?: 0f, if (hue == null) 0.12f else 0.6f, v)
+    /**
+     * Eight bands of the app's hue, darkest at the top: bright by day, deep at night, and fading
+     * to orange at the horizon around sunrise and sunset. Grey apps get a nearly grey sky.
+     */
+    fun sky(hue: Float?, daylight: Daylight = Daylight.DUSK): List<Color> {
+        val h = hue ?: 0f
+        fun grey(s: Float) = if (hue == null) 0.12f else s
+        return when (daylight) {
+            Daylight.DAY -> DAY_VALUES.map { Color.hsv(h, grey(0.42f), it) }
+            Daylight.NIGHT -> NIGHT_VALUES.map { Color.hsv(h, grey(0.5f), it) }
+            Daylight.DUSK -> BAND_VALUES.mapIndexed { i, v ->
+                if (i < 4) Color.hsv(h, grey(0.55f), v + 0.04f) else Color.hsv(20f + (i - 4) * 5f, 0.65f, 0.36f + (i - 4) * 0.07f)
+            }
+        }
     }
 
     fun bandTop(band: Int) = band * BAND_ROWS
     fun bandHeight(band: Int) = if (band == BAND_VALUES.lastIndex) H - bandTop(band) else BAND_ROWS
 }
 
-/** One activity playing on a loop at 12 frames a second, in front of a sky of the app's colour. */
+/**
+ * One activity playing on a loop at 12 frames a second, in front of a sky of the app's colour,
+ * with the time of day, the weather and any special occasion on top.
+ */
 @Composable
-fun ShelfScene(activity: Activity, hue: Float?, modifier: Modifier = Modifier) {
+fun ShelfScene(activity: Activity, hue: Float?, ambience: Ambience, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val sheet = remember(activity) { ShelfArt.sheet(context, activity) }
-    val sky = remember(hue) { ShelfArt.sky(hue) }
-    var frame by remember { mutableIntStateOf(0) }
+    val sky = remember(hue, ambience.daylight) { ShelfArt.sky(hue, ambience.daylight) }
+    var tick by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         while (true) {
             delay(FRAME_MS)
             withFrameNanos { } // waits while nothing is on screen
-            frame = (frame + 1) % ShelfArt.FRAMES
+            tick++
         }
     }
 
     Canvas(modifier) {
+        val frame = tick % ShelfArt.FRAMES
         val cell = size.height / ShelfArt.H
         sky.forEachIndexed { band, color ->
             drawRect(
@@ -102,6 +119,7 @@ fun ShelfScene(activity: Activity, hue: Float?, modifier: Modifier = Modifier) {
                 Size(size.width, ShelfArt.bandHeight(band) * cell),
             )
         }
+        if (ambience.daylight == Daylight.NIGHT) drawNightSky(cell, tick)
         drawImage(
             sheet,
             srcOffset = ShelfArt.frameOffset(frame),
@@ -109,5 +127,7 @@ fun ShelfScene(activity: Activity, hue: Float?, modifier: Modifier = Modifier) {
             dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
             filterQuality = FilterQuality.None,
         )
+        drawAmbience(ambience, activity.indoor, cell, tick)
+        ambience.occasion?.let { drawOccasion(it, cell, tick) }
     }
 }

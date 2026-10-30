@@ -29,6 +29,27 @@ background, and app artwork is scaled down to keep memory low.
   the system settings.
 - **Number keys:** hold 1 to 9 on the remote to open the app in that spot, counting along the rows.
 
+- **Time and weather:** the sky in the top shelf follows the day: bright by day, orange around
+  sunrise and sunset, starry at night. Outdoor scenes get rain, snow, fog or clouds when the
+  weather outside has them, and the temperature sits next to the clock. Weather comes from
+  Open-Meteo.
+- **Occasions:** birthdays get a banner, balloons and confetti; Halloween brings bats and
+  pumpkins, Hanukkah a menorah with the right number of candles, Christmas lights and snow,
+  and New Year fireworks.
+
+## Personal settings
+
+Your location, birthdays, holidays and streaming accounts stay on the TV, never in this repo.
+Copy `dnd.example.json` to `dnd.json`, fill it in (dates are `MM-DD`, names in English letters,
+leave out anything you don't use), then push it:
+
+```sh
+adb push dnd.json /sdcard/Android/data/com.tclstreamer.launcher/files/dnd.json
+```
+
+D&D reads it the next time you come back to the home screen. Without a location it works one out
+from the internet connection.
+
 ## Updates
 
 D&D checks GitHub every few hours. When there is a newer build, an **Update D&D** tile appears in

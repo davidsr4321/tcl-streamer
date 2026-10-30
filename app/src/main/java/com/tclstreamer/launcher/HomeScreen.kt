@@ -90,6 +90,9 @@ private object Home {
 fun HomeScreen(
     apps: List<TvApp>?,
     quickTiles: List<QuickTile>,
+    ambience: Ambience,
+    /** The temperature outside in °C, when the weather has loaded. */
+    temperature: Int?,
     onLaunch: (Intent) -> Unit,
 ) {
     Box(Modifier.fillMaxSize().background(Home.Background)) {
@@ -103,7 +106,7 @@ fun HomeScreen(
         if (shelfApp !in apps) shelfApp = apps.first()
 
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-            TopShelf(shelfApp)
+            TopShelf(shelfApp, ambience)
             Column(
                 modifier = Modifier
                     .offset(y = -Home.DockOverlap)
@@ -134,7 +137,7 @@ fun HomeScreen(
             }
         }
 
-        Clock(Modifier.align(Alignment.TopEnd).padding(top = 28.dp, end = Home.SideMargin))
+        Clock(temperature, Modifier.align(Alignment.TopEnd).padding(top = 28.dp, end = Home.SideMargin))
 
         LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
     }
@@ -145,10 +148,10 @@ fun HomeScreen(
  * of the app's colour, fading into the background behind the grid.
  */
 @Composable
-private fun TopShelf(app: TvApp) {
+private fun TopShelf(app: TvApp, ambience: Ambience) {
     Box(Modifier.fillMaxWidth().height(Home.ShelfHeight)) {
         Crossfade(targetState = app, animationSpec = tween(500), label = "scene") { shown ->
-            ShelfScene(shown.activity, shown.hue, Modifier.fillMaxSize())
+            ShelfScene(shown.activity, shown.hue, ambience, Modifier.fillMaxSize())
         }
         Box(
             Modifier.fillMaxSize().background(
@@ -202,7 +205,7 @@ private fun TopShelf(app: TvApp) {
 }
 
 @Composable
-private fun Clock(modifier: Modifier) {
+private fun Clock(temperature: Int?, modifier: Modifier) {
     val context = LocalContext.current
     val now by produceState(LocalTime.now()) {
         while (true) {
@@ -212,7 +215,7 @@ private fun Clock(modifier: Modifier) {
     }
     val pattern = if (DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm"
     BasicText(
-        now.format(DateTimeFormatter.ofPattern(pattern)),
+        now.format(DateTimeFormatter.ofPattern(pattern)) + (temperature?.let { "   $it°" } ?: ""),
         modifier = modifier,
         style = TextStyle(
             color = Home.Text,

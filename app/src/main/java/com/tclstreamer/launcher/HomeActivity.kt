@@ -28,6 +28,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.LocalDate
 
 class HomeActivity : ComponentActivity() {
 
@@ -45,8 +47,12 @@ class HomeActivity : ComponentActivity() {
     private val updating = mutableStateOf(false)
     private var lastUpdateCheck = 0L
     private val hdmi = mutableStateOf<List<Pair<String, String>>>(emptyList())
-    /** Bumped to redraw the sleep timer's minutes left. */
+    /** Bumped every half minute to redraw the sleep timer's minutes left and the time of day. */
     private val tick = mutableIntStateOf(0)
+    private var config: DnDConfig? = null
+    private val conditions = mutableStateOf<Conditions?>(null)
+    private var lastWeatherCheck = 0L
+    private val occasion = mutableStateOf<Occasion?>(null)
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -75,12 +81,28 @@ class HomeActivity : ComponentActivity() {
             // Home is the bottom of the stack: Back has nowhere to go.
             BackHandler {}
             Box {
-                HomeScreen(apps = content.value, quickTiles = quickTiles(), onLaunch = ::launch)
+                tick.intValue // re-read the time of day whenever this changes
+                val ambience = Ambience(
+                    daylight = daylightAt(Instant.now(), conditions.value),
+                    weather = conditions.value?.weather ?: Weather.CLEAR,
+                    occasion = occasion.value,
+                )
+                HomeScreen(
+                    apps = content.value,
+                    quickTiles = quickTiles(),
+                    ambience = ambience,
+                    temperature = conditions.value?.temperature,
+                    onLaunch = ::launch,
+                )
 
                 LaunchedEffect(inFront.value) {
                     while (inFront.value) {
                         delay(30_000)
                         tick.intValue++
+                        config?.let {
+                            occasion.value = occasionOn(LocalDate.now(), it)
+                            checkWeather(it)
+                        }
                     }
                 }
 
@@ -108,6 +130,12 @@ class HomeActivity : ComponentActivity() {
         hdmi.value = hdmiInputs(this)
         tick.intValue++
         checkForUpdate()
+        lifecycleScope.launch {
+            val loaded = withContext(Dispatchers.IO) { DnDConfig.load(applicationContext) }
+            config = loaded
+            occasion.value = occasionOn(LocalDate.now(), loaded)
+            checkWeather(loaded)
+        }
     }
 
     override fun onPause() {
@@ -195,6 +223,13 @@ class HomeActivity : ComponentActivity() {
         add(QuickTile("settings", "Settings", null, QuickIcons.GEAR) { launch(Intent(Settings.ACTION_SETTINGS)) })
     }
 
+    private suspend fun checkWeather(config: DnDConfig) {
+        val now = SystemClock.elapsedRealtime()
+        if (lastWeatherCheck != 0L && now - lastWeatherCheck < WEATHER_CHECK_MS) return
+        lastWeatherCheck = now
+        WeatherService.fetch(config)?.let { conditions.value = it }
+    }
+
     private fun checkForUpdate() {
         val now = SystemClock.elapsedRealtime()
         if (lastUpdateCheck != 0L && now - lastUpdateCheck < UPDATE_CHECK_MS) return
@@ -225,5 +260,6 @@ class HomeActivity : ComponentActivity() {
         /** How long the remote has to sit untouched before the screensaver comes out. */
         const val IDLE_MS = 60_000L
         const val UPDATE_CHECK_MS = 3 * 60 * 60 * 1000L
+        const val WEATHER_CHECK_MS = 30 * 60 * 1000L
     }
 }
