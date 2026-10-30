@@ -243,8 +243,8 @@ const ACTIVITIES = (() => {
     const rnd = rng(31);
     cloud(g, 150, 12, 22); cloud(g, 40, 8, 18); cloud(g, 100, 16, 12);
     // Fence, a house with a porch, grass and flowers.
-    g.rect(0, 47, 205, 1, "#d8d0c0"); g.rect(0, 53, 205, 1, "#d8d0c0");
-    for (let x = 1; x < 205; x += 6) { g.rect(x, 44, 3, 14, "#e8e0d0"); g.px(x + 1, 43, "#e8e0d0"); }
+    g.rect(0, 47, 205, 1, "#6a5040"); g.rect(0, 53, 205, 1, "#6a5040");
+    for (let x = 1; x < 205; x += 6) { g.rect(x, 44, 3, 14, "#7a5c46"); g.px(x + 1, 43, "#7a5c46"); g.rect(x, 44, 1, 14, "#8a6a52"); }
     g.rect(206, 18, 34, 40, "#c8b090");
     for (let y = 20; y < 58; y += 3) g.rect(206, y, 34, 1, "#b09878");
     g.rect(203, 14, 37, 4, "#7a3a2a"); g.rect(205, 12, 35, 2, "#8a4a36");
