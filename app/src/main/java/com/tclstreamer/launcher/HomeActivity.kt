@@ -208,7 +208,7 @@ class HomeActivity : ComponentActivity() {
             left == 0 -> "Off"
             else -> "$left min left"
         }
-        val release = {
+        val release: () -> Unit = {
             SleepTimer.release(this@HomeActivity)
             tick.intValue++
         }
@@ -218,7 +218,7 @@ class HomeActivity : ComponentActivity() {
         })
         updateTo.value?.let { build ->
             val detail = if (updating.value) "Downloading…" else "Build $build"
-            add(QuickTile("update", "Update D&D", detail, QuickIcons.UPDATE, ::startUpdate))
+            add(QuickTile("update", "Update D&D", detail, QuickIcons.UPDATE, onClick = ::startUpdate))
         }
         add(QuickTile("settings", "Settings", null, QuickIcons.GEAR) { launch(Intent(Settings.ACTION_SETTINGS)) })
     }
