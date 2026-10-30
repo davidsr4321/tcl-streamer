@@ -53,6 +53,8 @@ class HomeActivity : ComponentActivity() {
     private val conditions = mutableStateOf<Conditions?>(null)
     private var lastWeatherCheck = 0L
     private val occasion = mutableStateOf<Occasion?>(null)
+    private val watching = mutableStateOf<List<WatchItem>>(emptyList())
+    private var lastWatchingCheck = 0L
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -92,6 +94,8 @@ class HomeActivity : ComponentActivity() {
                     quickTiles = quickTiles(),
                     ambience = ambience,
                     temperature = conditions.value?.temperature,
+                    watching = watching.value,
+                    onOpen = ::open,
                     onLaunch = ::launch,
                 )
 
@@ -134,6 +138,7 @@ class HomeActivity : ComponentActivity() {
             val loaded = withContext(Dispatchers.IO) { DnDConfig.load(applicationContext) }
             config = loaded
             occasion.value = occasionOn(LocalDate.now(), loaded)
+            this.launch { checkWatching(loaded) }
             checkWeather(loaded)
         }
     }
@@ -223,6 +228,21 @@ class HomeActivity : ComponentActivity() {
         add(QuickTile("settings", "Settings", null, QuickIcons.GEAR) { launch(Intent(Settings.ACTION_SETTINGS)) })
     }
 
+    private suspend fun checkWatching(config: DnDConfig) {
+        if (config.plexToken == null && config.stremioAuthKey == null) return
+        val now = SystemClock.elapsedRealtime()
+        if (lastWatchingCheck != 0L && now - lastWatchingCheck < WATCHING_CHECK_MS) return
+        lastWatchingCheck = now
+        watching.value = ContinueWatching.load(config)
+    }
+
+    /** Straight to the title if the app takes the link, otherwise just the app. */
+    private fun open(item: WatchItem) {
+        for (intent in item.intents) {
+            if (runCatching { startActivity(intent) }.isSuccess) return
+        }
+    }
+
     private suspend fun checkWeather(config: DnDConfig) {
         val now = SystemClock.elapsedRealtime()
         if (lastWeatherCheck != 0L && now - lastWeatherCheck < WEATHER_CHECK_MS) return
@@ -261,5 +281,6 @@ class HomeActivity : ComponentActivity() {
         const val IDLE_MS = 60_000L
         const val UPDATE_CHECK_MS = 3 * 60 * 60 * 1000L
         const val WEATHER_CHECK_MS = 30 * 60 * 1000L
+        const val WATCHING_CHECK_MS = 5 * 60 * 1000L
     }
 }

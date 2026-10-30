@@ -25,6 +25,9 @@ background, and app artwork is scaled down to keep memory low.
   sparks when the blades meet. Who attacks swaps at random. Any button stops it. Change the delay
   with `IDLE_MS` in `HomeActivity.kt`.
 
+- **Continue watching:** right under the streaming apps, your half-watched titles from Plex and
+  Stremio with a progress bar. Pressing one opens it in its app. Needs the keys in `dnd.json`
+  (see below).
 - **Quick settings:** a row of tiles under the apps for Wi-Fi, each HDMI input, a sleep timer and
   the system settings.
 - **Number keys:** hold 1 to 9 on the remote to open the app in that spot, counting along the rows.
@@ -49,6 +52,12 @@ adb push dnd.json /sdcard/Android/data/com.tclstreamer.launcher/files/dnd.json
 
 D&D reads it the next time you come back to the home screen. Without a location it works one out
 from the internet connection.
+
+- **Plex token:** open any item in Plex on the web, choose ⋯ → Get Info → View XML, and copy the
+  `X-Plex-Token=` value from the address bar. The server address is the computer running Plex
+  with port 32400.
+- **Stremio key:** sign in at web.stremio.com, open the browser console (F12) and run
+  `JSON.parse(localStorage.profile).auth.key`.
 
 ## Updates
 

@@ -20,13 +20,15 @@
         </intent>
     </queries>
 
+    <!-- Plex servers on the home network usually speak plain http, hence usesCleartextTraffic. -->
     <application
         android:allowBackup="false"
         android:banner="@drawable/banner"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.DnD">
+        android:theme="@style/Theme.DnD"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".HomeActivity"

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -93,6 +94,8 @@ fun HomeScreen(
     ambience: Ambience,
     /** The temperature outside in °C, when the weather has loaded. */
     temperature: Int?,
+    watching: List<WatchItem>,
+    onOpen: (WatchItem) -> Unit,
     onLaunch: (Intent) -> Unit,
 ) {
     Box(Modifier.fillMaxSize().background(Home.Background)) {
@@ -127,6 +130,7 @@ fun HomeScreen(
                             )
                         }
                     }
+                    if (rowIndex == 0 && watching.isNotEmpty()) WatchRow(watching, onOpen)
                 }
                 // Wi-Fi, inputs, the sleep timer and settings, since the stock home screen is off.
                 quickTiles.chunked(Home.Columns).forEach { row ->
@@ -235,6 +239,50 @@ private fun AppTile(
 ) {
     Tile(app.label, modifier, onFocused, onClick = { onLaunch(app.launchIntent) }) {
         Artwork(app, Modifier.fillMaxSize())
+    }
+}
+
+/** Half-watched titles from Plex and Stremio, right under the streaming apps. */
+@Composable
+private fun WatchRow(items: List<WatchItem>, onOpen: (WatchItem) -> Unit) {
+    Column {
+        BasicText(
+            "Continue watching",
+            style = TextStyle(color = Home.TextSoft, fontFamily = Home.Sans, fontWeight = FontWeight.SemiBold, fontSize = 13.sp),
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(Home.Gap),
+        ) {
+            items.forEach { item ->
+                Tile(item.title, Modifier, onFocused = {}, onClick = { onOpen(item) }) {
+                    Box(Modifier.fillMaxSize().background(Home.Tile)) {
+                        val image = item.image
+                        if (image != null) {
+                            Image(image, contentDescription = item.title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                        } else {
+                            BasicText(
+                                item.title,
+                                modifier = Modifier.align(Alignment.Center).padding(8.dp),
+                                style = TextStyle(color = Home.Text, fontFamily = Home.Sans, fontSize = 11.sp, textAlign = TextAlign.Center),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        // How far through it you are.
+                        Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(3.dp).background(Color(0x55000000)))
+                        Box(
+                            Modifier
+                                .align(Alignment.BottomStart)
+                                .fillMaxWidth(item.progress.coerceIn(0.02f, 1f))
+                                .height(3.dp)
+                                .background(Home.Ivory)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
