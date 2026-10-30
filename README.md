@@ -29,6 +29,15 @@ Every push builds a signed APK on GitHub Actions. Open the **Actions** tab, pick
 To build locally instead, install the Android SDK and run `./gradlew assembleRelease`.
 The APK lands in `app/build/outputs/apk/release/`.
 
+## Install straight from the TV
+
+Every push also publishes the APK at a fixed link:
+https://github.com/davidsr4321/tcl-streamer/releases/download/latest/noir.apk
+
+1. On the TV, install **Downloader** (by AFTVnews) from the Google Play Store.
+2. Settings → Device Preferences → Security & restrictions → Unknown sources: allow **Downloader**.
+3. Open Downloader, type the link above, and choose **Install** when it finishes.
+
 ## Install on the TV
 
 1. On the TV: Settings → Device Preferences → About → click **Build** seven times, then turn on

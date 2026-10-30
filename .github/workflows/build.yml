@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -26,3 +28,18 @@ jobs:
         with:
           name: noir-launcher
           path: app/build/outputs/apk/release/*.apk
+
+      # A fixed download link for installing straight from the TV:
+      # https://github.com/davidsr4321/tcl-streamer/releases/download/latest/noir.apk
+      - name: Copy APK for the download link
+        if: github.event_name == 'push'
+        run: cp app/build/outputs/apk/release/app-release.apk noir.apk
+
+      - name: Publish the download link
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          prerelease: true
+          files: noir.apk
