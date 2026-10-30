@@ -38,13 +38,13 @@ jobs:
       # A fixed download link for installing straight from the TV:
       # https://github.com/davidsr4321/tcl-streamer/releases/download/latest/noir.apk
       - name: Copy APK for the download link
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           cp app/build/outputs/apk/release/app-release.apk noir.apk
           echo "${{ github.run_number }}" > version.txt
 
       - name: Publish the download link
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
