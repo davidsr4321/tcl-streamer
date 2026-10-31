@@ -8,7 +8,7 @@ const ACTIVITIES = (() => {
     S: "#e9b99a", s: "#cf9a7c", E: "#2a1a12", K: "#161616",
     H: "#2b1d16", B: "#3a2418", T: "#a98bd8", P: "#2c3340",
     R: "#d9783a", r: "#f0a060", F: "#c47a58", b: "#c0602c", D: "#4f7a4a", J: "#3d4f6e",
-    L: "#5a3424", l: "#7a4a30", G: "#c8a868", m: "#c8706a", N: "#1c1c24",
+    L: "#5a3424", l: "#7a4a30", G: "#b08a3a", g: "#e8f0f8", m: "#c8706a", N: "#1c1c24",
   };
   const pal = (rows, hair, shirt, pants, blinkAt) => ({
     rows, hair, shirt, pants, blinkAt,
@@ -21,7 +21,7 @@ const ACTIVITIES = (() => {
   const DARK = pal(["...HHHHHH...","..HHHHHHHH..","..HHHHHHHH..","..HSSSSSSH..","..SESSSSES..",".sSSSSSSSSs.","..BSSssSSB..","..BBBBBBBB..","..BBBSSBBB..","...BBBBBB...","....SSSS....",".TTTTTTTTTT.","TTTTTTTTTTTT","TTTTTTTTTTTT","STTTTTTTTTTS","S.TTTTTTTT.S","..PPPPPPPP..","..PPP..PPP..","..PPP..PPP..","..KKK..KKK.."], "H", "T", "P", 17);
   const GINGER = pal(["..r.RR.rR...","..RRRRRRRR..",".RRrRRRRrRR.","..RSSSSSSR..","..SESSSSES..",".sSFSSSSFSs.","..bSSssSSb..","..bSbbbbSb..","..bbbSSbbb..","...bbbbbb...","....SSSS....",".DDDDDDDDDD.","DDDDDDDDDDDD","SDDDDDDDDDDS","S.DDDDDDDD.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "R", "D", "J", 7);
   // Long curly chestnut hair, round gold glasses, black tee, jeans.
-  const SHIR = pal(["...LLLLLL...","..LLlLLlLL..",".LLLLLLLLLL.",".LLSSSSSSLL.",".LGEGSSGEGL.",".LSSSSSSSSL.","LLSSSssSSSLL","LLLSSmmSSLLL","LLL.SSSS.LLL","LLLNNNNNNLLL","LLNNNNNNNNLL","LLNNNNNNNNLL","SLNNNNNNNNLS","S.NNNNNNNN.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "L", "N", "J", 13);
+  const SHIR = pal(["...LLLLLL...","..LLlLLlLL..",".LLSSSSSSLL.",".LGGGSSGGGL.",".LGEgGGgEGL.",".LGGGSSGGGL.","LLSSSssSSSLL","LLLSSmmSSLLL","LLL.SSSS.LLL","LLLNNNNNNLLL","LLNNNNNNNNLL","LLNNNNNNNNLL","SLNNNNNNNNLS","S.NNNNNNNN.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "L", "N", "J", 13);
   const SKIN = PALETTE.S;
 
   // ---- Drawing helpers. One canvas unit is one scene pixel. ----
