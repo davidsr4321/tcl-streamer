@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:fillColor="#FF0E0E10" android:pathData="M0,0h320v180h-320z" />
+    <!-- "D&D" in the same chunky pixel style as the characters, with a gold drop shadow. -->
+    <path android:fillColor="#FFC9A040" android:pathData="M92,66h8v8h-8zM100,66h8v8h-8zM108,66h8v8h-8zM116,66h8v8h-8zM92,74h8v8h-8zM124,74h8v8h-8zM92,82h8v8h-8zM124,82h8v8h-8zM92,90h8v8h-8zM124,90h8v8h-8zM92,98h8v8h-8zM124,98h8v8h-8zM92,106h8v8h-8zM124,106h8v8h-8zM92,114h8v8h-8zM100,114h8v8h-8zM108,114h8v8h-8zM116,114h8v8h-8zM148,66h8v8h-8zM156,66h8v8h-8zM140,74h8v8h-8zM164,74h8v8h-8zM140,82h8v8h-8zM164,82h8v8h-8zM148,90h8v8h-8zM156,90h8v8h-8zM140,98h8v8h-8zM164,98h8v8h-8zM180,98h8v8h-8zM140,106h8v8h-8zM172,106h8v8h-8zM148,114h8v8h-8zM156,114h8v8h-8zM164,114h8v8h-8zM180,114h8v8h-8zM196,66h8v8h-8zM204,66h8v8h-8zM212,66h8v8h-8zM220,66h8v8h-8zM196,74h8v8h-8zM228,74h8v8h-8zM196,82h8v8h-8zM228,82h8v8h-8zM196,90h8v8h-8zM228,90h8v8h-8zM196,98h8v8h-8zM228,98h8v8h-8zM196,106h8v8h-8zM228,106h8v8h-8zM196,114h8v8h-8zM204,114h8v8h-8zM212,114h8v8h-8zM220,114h8v8h-8z" />
+    <path android:fillColor="#FFF2EDE4" android:pathData="M88,62h8v8h-8zM96,62h8v8h-8zM104,62h8v8h-8zM112,62h8v8h-8zM88,70h8v8h-8zM120,70h8v8h-8zM88,78h8v8h-8zM120,78h8v8h-8zM88,86h8v8h-8zM120,86h8v8h-8zM88,94h8v8h-8zM120,94h8v8h-8zM88,102h8v8h-8zM120,102h8v8h-8zM88,110h8v8h-8zM96,110h8v8h-8zM104,110h8v8h-8zM112,110h8v8h-8zM144,62h8v8h-8zM152,62h8v8h-8zM136,70h8v8h-8zM160,70h8v8h-8zM136,78h8v8h-8zM160,78h8v8h-8zM144,86h8v8h-8zM152,86h8v8h-8zM136,94h8v8h-8zM160,94h8v8h-8zM176,94h8v8h-8zM136,102h8v8h-8zM168,102h8v8h-8zM144,110h8v8h-8zM152,110h8v8h-8zM160,110h8v8h-8zM176,110h8v8h-8zM192,62h8v8h-8zM200,62h8v8h-8zM208,62h8v8h-8zM216,62h8v8h-8zM192,70h8v8h-8zM224,70h8v8h-8zM192,78h8v8h-8zM224,78h8v8h-8zM192,86h8v8h-8zM224,86h8v8h-8zM192,94h8v8h-8zM224,94h8v8h-8zM192,102h8v8h-8zM224,102h8v8h-8zM192,110h8v8h-8zM200,110h8v8h-8zM208,110h8v8h-8zM216,110h8v8h-8z" />
+</vector>
