@@ -402,7 +402,7 @@ const ACTIVITIES = (() => {
   // The N12 newsroom: Naomi and Afik read the news, Roi does the weather, Bar films it all.
   // Halfway through the loop the studio breaks into a dance party.
   A.news = (g, f) => {
-    const party = f >= 24, bounce = party && f % 6 < 3 ? -1 : 0;
+    const party = f >= 24;
     wall(g, 0.62);
     for (let x = 0; x < W; x += 10) g.rect(x, 0, 1, 58, "rgba(255,255,255,0.03)");
     // The big studio screen with a turning globe.
@@ -420,20 +420,35 @@ const ACTIVITIES = (() => {
     else { g.rect(159, 25, 7, 3, "#e8eef4"); g.rect(160, 24, 4, 1, "#e8eef4"); for (const dx of [0, 3, 6]) g.px(159 + dx, 29 + (f % 2), "#9ad0ff"); }
     // Floor, and the news desk.
     g.rect(0, 58, W, 17, "#24202c"); g.rect(0, 57, W, 1, "#3a3446");
-    g.person(NAOMI, 177, 34 + bounce, f, { upTo: NAOMI.waist, hands: party ? "LR" : "" , map: (ch, r, c, col) => (!party && ch === "m" && f % 4 < 2) ? "#6a2a2a" : col });
-    g.person(AFIK, 202, 35 + (party && f % 6 >= 3 ? -1 : 0), f, { upTo: AFIK.waist, hands: party ? "LR" : "", map: (ch, r, c, col) => (ch === "M" && f % 24 >= 16 && f % 2) ? "#6a1a1a" : col });
-    if (!party) { const py = 47 - (f % 8 < 2 ? 1 : 0); g.rect(205, py, 6, 2, "#f4f0e8"); g.rect(204, py + 1, 1, 1, SKIN); g.rect(211, py + 1, 1, 1, SKIN); }
-    g.rect(176, 47, 40, 11, "#1c2c4c"); g.rect(176, 47, 40, 1, "#3c5c8c"); g.rect(176, 52, 40, 1, "#c03030");
-    // Roi points at the map; in the party he waves both arms.
-    const rx = 154;
-    g.person(ROI, rx, 38 + bounce, f, { hands: party ? "" : "R" });
-    if (!party) { g.line(rx, 49, rx - 3, 45, SKIN); }
-    else { const up = f % 6 < 3; g.rect(rx - 1, 44 + bounce + (up ? 0 : 3), 1, 3, SKIN); g.rect(rx + 12, 44 + bounce + (up ? 3 : 0), 1, 3, SKIN); }
-    // Bar films with a shoulder camera; the red light blinks.
-    const bx = 226, tilt = party && f % 6 < 3 ? 1 : 0;
-    g.person(BAR, bx, 38, f, { hands: "R" });
-    g.rect(216, 41 + tilt, 11, 5, "#3a3a44"); g.rect(214, 42 + tilt, 2, 3, "#16161c"); g.px(214, 42 + tilt, "#8ab0d8");
-    g.rect(219, 39 + tilt, 5, 2, "#2a2a32"); if (f % 12 < 6) g.px(225, 40 + tilt, "#ff3030");
+    const desk = () => { g.rect(176, 47, 40, 11, "#1c2c4c"); g.rect(176, 47, 40, 1, "#3c5c8c"); g.rect(176, 52, 40, 1, "#c03030"); };
+    if (!party) {
+      g.person(NAOMI, 177, 34, f, { upTo: NAOMI.waist, hands: "", map: (ch, r, c, col) => (ch === "m" && f % 4 < 2) ? "#6a2a2a" : col });
+      g.person(AFIK, 202, 35, f, { upTo: AFIK.waist, hands: "", map: (ch, r, c, col) => (ch === "M" && f % 24 >= 16 && f % 2) ? "#6a1a1a" : col });
+      const py = 47 - (f % 8 < 2 ? 1 : 0); g.rect(205, py, 6, 2, "#f4f0e8"); g.rect(204, py + 1, 1, 1, SKIN); g.rect(211, py + 1, 1, 1, SKIN);
+      desk();
+      // Roi points at the map.
+      const rx = 154;
+      g.person(ROI, rx, 38, f, { hands: "R" });
+      g.line(rx, 49, rx - 3, 45, SKIN);
+      // Bar films with a shoulder camera; the red light blinks.
+      g.person(BAR, 226, 38, f, { hands: "R" });
+      g.rect(216, 41, 11, 5, "#3a3a44"); g.rect(214, 42, 2, 3, "#16161c"); g.px(214, 42, "#8ab0d8");
+      g.rect(219, 39, 5, 2, "#2a2a32"); if (f % 12 < 6) g.px(225, 40, "#ff3030");
+    } else {
+      // Party: the camera goes on a tripod, David and Dor burst in, and all six dance in a line.
+      desk();
+      g.line(228, 46, 224, 57, "#555"); g.line(230, 46, 230, 57, "#555"); g.line(232, 46, 236, 57, "#555");
+      g.rect(224, 41, 11, 5, "#3a3a44"); g.rect(222, 42, 2, 3, "#16161c"); g.px(222, 42, "#8ab0d8"); if (f % 12 < 6) g.px(233, 40, "#ff3030");
+      const line = [[ROI, 141], [DAVID, 157], [DOR, 173], [NAOMI, 189], [BAR, 205], [AFIK, 221]];
+      line.forEach(([p, x], i) => {
+        const beat = (f + i * 2) % 6 < 3, y = (i % 2 ? 61 : 57) - p.rows.length + (beat ? -1 : 0);
+        g.person(p, x, y, f, { rows: beat ? p.walkA : p.walkB, hands: "" });
+        // Arms up, swapping sides on the beat.
+        const top = y + p.hand - 4;
+        g.rect(x - 1, top + (beat ? 0 : 3), 1, 3, SKIN);
+        g.rect(x + 12, top + (beat ? 3 : 0), 1, 3, SKIN);
+      });
+    }
     // The ticker along the bottom.
     g.rect(0, 67, W, 8, "#14182a"); g.rect(140, 67, 22, 8, "#c02a2a");
     for (let i = 0; i < 8; i++) { const tx = 162 + ((i * 14 - f * 2) % 112 + 112) % 112; if (tx < 236) g.rect(tx, 70, 8 + (i % 3) * 2, 2, party ? `hsl(${(i * 45 + f * 15) % 360},80%,65%)` : "#c8cede"); }
