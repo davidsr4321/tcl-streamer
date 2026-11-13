@@ -63,10 +63,16 @@ class AppRepository(private val context: Context) {
             icon = icon?.asImageBitmap(),
             tint = tintOf(banner ?: icon),
             hue = HUES[activity.packageName] ?: accentHue(banner ?: icon),
-            activity = ACTIVITIES[activity.packageName]
-                ?: Activity.entries[Math.floorMod(activity.packageName.hashCode(), Activity.entries.size)],
+            activity = activityFor(activity.packageName, info.loadLabel(pm).toString()),
             launchIntent = intent,
         )
+    }
+
+    private fun activityFor(packageName: String, label: String): Activity {
+        ACTIVITIES[packageName]?.let { return it }
+        val name = "$packageName $label".lowercase()
+        if ("n12" in name || "mako" in name || "keshet" in name) return Activity.NEWS
+        return FALLBACK[Math.floorMod(packageName.hashCode(), FALLBACK.size)]
     }
 
     /** Average colour of the artwork, darkened so white text always reads on top of it. */
@@ -153,7 +159,7 @@ class AppRepository(private val context: Context) {
             "com.google.android.youtube.tv" to Activity.CHASE,
             "com.liskovsoft.smarttubetv.beta" to Activity.PROGRAMMING,
             "org.smarttube.stable" to Activity.PROGRAMMING,
-            "com.amazon.amazonvideo.livingroom" to Activity.HIKING,
+            "com.amazon.amazonvideo.livingroom" to Activity.TRAVEL,
             "com.disney.disneyplus" to Activity.SWIMMING,
             "com.wbd.stream" to Activity.CLIMBING,
             "com.apple.atve.androidtv.appletv" to Activity.COUCH,
@@ -163,6 +169,9 @@ class AppRepository(private val context: Context) {
             "com.spotify.tv.android" to Activity.RUNNING,
             "org.videolan.vlc" to Activity.CAT,
         )
+
+        /** Scenes for apps without one of their own; the personal ones stay with their apps. */
+        private val FALLBACK = Activity.entries - setOf(Activity.TRAVEL, Activity.NEWS)
 
         /** Stock launchers that would only add clutter to the grid. */
         private val HIDDEN = setOf(

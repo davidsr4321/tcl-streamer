@@ -260,6 +260,9 @@ private class Duel {
         private set
     var breathing = 0.8f
         private set
+    /** While set, the titan scene plays instead of a move; true when the left fighter transforms. */
+    var titanIsLeft: Boolean? = null
+        private set
 
     fun advance(dt: Float) {
         clock += dt
@@ -268,11 +271,21 @@ private class Duel {
             return
         }
         t += dt
+        if (titanIsLeft != null) {
+            if (t >= TITAN_SECONDS) {
+                t = 0f
+                titanIsLeft = null
+                breathing = 1f
+            }
+            return
+        }
         if (t >= move.duration) {
             t = 0f
             breathing = 0.3f + Random.nextFloat() * 0.5f
             move = (MOVES - move).random()
             attackerIsLeft = Random.nextBoolean()
+            // Now and then one of them turns into a titan instead.
+            if (Random.nextInt(TITAN_ODDS) == 0) titanIsLeft = Random.nextBoolean()
         }
     }
 
@@ -310,8 +323,14 @@ private class Stage(
     }
 
     fun draw(duel: Duel) {
-        val left = Placed(DARK, duel.left(), centerX - 19 + duel.left().dx.roundToInt(), facing = 1)
-        val right = Placed(GINGER, duel.right(), centerX + 7 - duel.right().dx.roundToInt(), facing = -1)
+        duel.titanIsLeft?.let { left ->
+            if (duel.breathing <= 0f) {
+                titan(duel.t, left)
+                return
+            }
+        }
+        val left = Placed(DAVID, duel.left(), centerX - 19 + duel.left().dx.roundToInt(), facing = 1)
+        val right = Placed(DOR, duel.right(), centerX + 7 - duel.right().dx.roundToInt(), facing = -1)
         val fighters = listOf(left, right)
 
         fighters.forEach { shadow(it) }
@@ -325,6 +344,7 @@ private class Stage(
         }
 
         val tips = fighters.map { fighter(it, duel.clock) }
+        fighters.forEach { nameTag(it.pal.name, it.x + SPRITE_W / 2, ground + 2) }
 
         if (fighting) {
             move.clangs.forEach { at ->
@@ -421,12 +441,221 @@ private class Stage(
         for (x in f.x + 1 + shrink until f.x + SPRITE_W - 1 - shrink) cell(x, ground, color)
     }
 
+    // ---- The titan: one of them is struck by lightning, grows into a giant version of
+    // themselves, catches the other, eats them, burps, shrinks back, and the friend pops out
+    // of a puff of steam unharmed. All timings are seconds into the scene. ----
+
+    private fun titan(t: Float, leftTransforms: Boolean) {
+        val giant = if (leftTransforms) DAVID else DOR
+        val victim = if (leftTransforms) DOR else DAVID
+        val giantX = if (leftTransforms) centerX - 19 else centerX + 7
+        val home = if (leftTransforms) centerX + 7 else centerX - 19
+        val away = if (leftTransforms) 1 else -1
+        val scale = when {
+            t < 1.0f -> 1
+            t < 1.3f -> 2
+            t < 7.4f -> 3
+            t < 7.7f -> 2
+            else -> 1
+        }
+        val rows = giant.stand
+        val cx = giantX + SPRITE_W / 2
+        val left = cx - SPRITE_W / 2 * scale
+        val top = ground - rows.size * scale
+        val armOut = t in 2.2f..6.0f
+
+        // Shadows.
+        val shade = Color.Black.copy(alpha = 0.45f)
+        for (x in left + scale until left + (SPRITE_W - 1) * scale) cell(x, ground, shade)
+
+        // The giant, without the reaching hand while the arm is out.
+        val handCol = if (away > 0) SPRITE_W - 1 else 0
+        for (row in rows.indices) for (col in rows[row].indices) {
+            if (armOut && col == handCol && (row == giant.handRow || row == giant.handRow + 1)) continue
+            val color = PALETTE[rows[row][col]] ?: continue
+            for (dy in 0 until scale) for (dx in 0 until scale) cell(left + col * scale + dx, top + row * scale + dy, color)
+        }
+        if (t < 0.5f) sword(if (away > 0) giantX + SPRITE_W - 1 else giantX, top + giant.handRow, GUARD, away)
+
+        // The mouth: a toothy titan grin, wide open to eat, then chewing.
+        val mx0 = left + 3 * scale
+        val mx1 = left + 9 * scale
+        val my0 = top + 7 * scale
+        val my1 = top + 9 * scale
+        val chewing = t in 5.4f..6.7f && ((t - 5.4f) / 0.2f).toInt() % 2 == 0
+        val open = t in 4.2f..5.25f
+        if (scale == 3) mouth(mx0, mx1, my0, my1, if (open) 2 else if (chewing) 1 else 0)
+
+        // The friend: stands, panics and drops the sword, runs, cowers, gets caught.
+        val runX = home + (away * 16 * ((t - 1.2f) / 1.0f).coerceIn(0f, 1f)).roundToInt()
+        val grab = (runX + SPRITE_W / 2) to (ground - 9)
+        val shoulder = (if (away > 0) left + SPRITE_W * scale - 2 else left + 1) to (top + 11 * scale + 1)
+        val rest = (shoulder.first + away * 2) to (top + (giant.handRow + 1) * scale)
+        val mouthX = (mx0 + mx1) / 2
+        val hover = mouthX + away * 7 to my0 - 2
+        val hand = when {
+            t < 3.0f -> lerp(rest, grab, (t - 2.2f) / 0.8f)
+            t < 3.2f -> grab
+            t < 4.2f -> lerp(grab, hover, (t - 3.2f) / 1.0f)
+            t < 5.2f -> hover
+            else -> lerp(hover, rest, (t - 5.2f) / 0.8f)
+        }
+        if (t >= 1.0f && t < 8.4f) sword(home + SPRITE_W / 2, ground - 1, 0f, away) // dropped
+        val vRows = victim.stand
+        when {
+            t < 0.8f -> {
+                person(victim.stand, home, ground - vRows.size)
+                sword(if (away > 0) home else home + SPRITE_W - 1, ground - vRows.size + victim.handRow, GUARD, -away)
+            }
+            t < 1.2f -> person(victim.stand, home, ground - vRows.size, flash = (t / 0.08f).toInt() % 2 == 0)
+            t < 2.2f -> {
+                val legs = if ((t / 0.12f).toInt() % 2 == 0) victim.walkA else victim.walkB
+                person(legs, runX, ground - legs.size)
+            }
+            t < 3.0f -> person(victim.crouch, runX + if ((t / 0.1f).toInt() % 2 == 0) 0 else 1, ground - victim.crouch.size)
+            t < 4.6f -> {
+                val kick = if ((t / 0.12f).toInt() % 2 == 0) victim.walkA else victim.walkB
+                person(kick, hand.first - SPRITE_W / 2, hand.second - kick.size / 2)
+            }
+            t < 5.2f -> {
+                // Lowered into the mouth, disappearing below its bottom edge.
+                val slide = ((t - 4.6f) / 0.6f * (vRows.size + my1 - my0)).roundToInt()
+                person(victim.walkA, mouthX - SPRITE_W / 2, my0 - vRows.size + slide, clipBelow = my1)
+            }
+            t in 8.4f..9.0f -> if ((t / 0.1f).toInt() % 2 == 0) person(victim.stand, home, ground - vRows.size)
+            t >= 9.0f -> {
+                person(victim.stand, home, ground - vRows.size)
+                sword(if (away > 0) home else home + SPRITE_W - 1, ground - vRows.size + victim.handRow, GUARD, -away)
+            }
+        }
+
+        // The reaching arm, sleeve then skin, with a fist-sized hand.
+        if (armOut) {
+            val sleeve = PALETTE[giant.stand[giant.handRow][5]] ?: Color.Gray
+            val skin = PALETTE.getValue('S')
+            val steps = maxOf(abs(hand.first - shoulder.first), abs(hand.second - shoulder.second), 1)
+            for (i in 0..steps) {
+                val x = shoulder.first + (hand.first - shoulder.first) * i / steps
+                val y = shoulder.second + (hand.second - shoulder.second) * i / steps
+                val color = if (i < steps * 0.55f) sleeve else skin
+                for (dy in -1..1) for (dx in -1..1) cell(x + dx, y + dy, color)
+            }
+            for (dy in -2..1) for (dx in -2..1) cell(hand.first + dx, hand.second + dy, skin)
+        }
+
+        // Lightning, steam, the chomp and a burp.
+        if (t in 0.45f..0.8f) lightning(cx, top, t)
+        if (t in 0.8f..1.9f) steam(left, top, SPRITE_W * scale, rows.size * scale, (t - 0.8f) / 1.1f)
+        if (t in 7.2f..8.3f) steam(left, top, SPRITE_W * scale, rows.size * scale, (t - 7.2f) / 1.1f)
+        if (t in 8.2f..8.9f) steam(home, ground - vRows.size, SPRITE_W, vRows.size, (t - 8.2f) / 0.7f)
+        if (t in 5.2f..5.45f) {
+            spark(mx0 - 1, (my0 + my1) / 2, t - 5.25f)
+            spark(mx1, (my0 + my1) / 2, t - 5.25f)
+        }
+        if (t in 6.8f..7.3f) {
+            val f = (t - 6.8f) / 0.5f
+            puff(mouthX + away * (4 + (f * 10).toInt()), (my0 + my1) / 2 - (f * 3).toInt(), 2 + (f * 3).toInt(), Color(0xFFC8E6A0).copy(alpha = 0.8f * (1 - f)))
+        }
+
+        nameTag(giant.name, cx, ground + 2)
+        if (t < 3.0f || t >= 8.4f) nameTag(victim.name, (if (t < 3.0f) runX else home) + SPRITE_W / 2, ground + 2)
+        if (t in 0.5f..0.62f) scope.drawRect(Color.White.copy(alpha = 0.55f), Offset.Zero, scope.size)
+    }
+
+    private fun lerp(a: Pair<Int, Int>, b: Pair<Int, Int>, f: Float): Pair<Int, Int> {
+        val k = f.coerceIn(0f, 1f)
+        return (a.first + (b.first - a.first) * k).roundToInt() to (a.second + (b.second - a.second) * k).roundToInt()
+    }
+
+    /** A plain sprite, optionally flashing white, optionally hidden from row y = [clipBelow] down. */
+    private fun person(rows: List<String>, x: Int, top: Int, flash: Boolean = false, clipBelow: Int = Int.MAX_VALUE) {
+        for (row in rows.indices) {
+            if (top + row >= clipBelow) break
+            for (col in rows[row].indices) {
+                val color = PALETTE[rows[row][col]] ?: continue
+                cell(x + col, top + row, if (flash) Color.White else color)
+            }
+        }
+    }
+
+    /** 0 closed in a grin, 1 half open, 2 wide open. */
+    private fun mouth(x0: Int, x1: Int, y0: Int, y1: Int, openness: Int) {
+        val dark = Color(0xFF3A0C10)
+        val tooth = Color(0xFFF4F0E4)
+        val gap = Color(0xFFB8B0A0)
+        fun teeth(y: Int) { for (x in x0 until x1) cell(x, y, if ((x - x0) % 3 == 2) gap else tooth) }
+        when (openness) {
+            2 -> {
+                for (y in y0 until y1) for (x in x0 until x1) cell(x, y, dark)
+                teeth(y0); teeth(y1 - 1)
+            }
+            1 -> {
+                for (y in y0 + 1 until y1 - 1) for (x in x0 until x1) cell(x, y, dark)
+                teeth(y0 + 1); teeth(y1 - 2)
+            }
+            else -> {
+                for (x in x0 until x1) { cell(x, y0 + 1, dark); cell(x, y1 - 2, dark) }
+                teeth(y0 + 2)
+            }
+        }
+    }
+
+    private fun lightning(x: Int, bottom: Int, t: Float) {
+        val bolt = Color(0xFFFFE45C)
+        var bx = x + if ((t / 0.06f).toInt() % 2 == 0) 0 else 2
+        var y = 0
+        var side = 1
+        while (y < bottom) {
+            for (i in 0 until 4) {
+                cell(bx, y + i, Color.White)
+                cell(bx - 1, y + i, bolt)
+                cell(bx + 1, y + i, bolt)
+            }
+            y += 4
+            bx += side * 2
+            side = -side
+        }
+    }
+
+    private fun steam(x: Int, y: Int, w: Int, h: Int, progress: Float) {
+        val alpha = (1f - progress).coerceIn(0f, 1f) * 0.85f
+        for (i in 0 until 10) {
+            val px = x + (i * 37 % 10) * w / 10
+            val py = y + (i * 53 % 10) * h / 10 - (progress * 6).toInt()
+            puff(px, py, 2 + (progress * 4).toInt() + i % 2, Color(0xFFE8E8E8).copy(alpha = alpha))
+        }
+    }
+
+    private fun puff(cx: Int, cy: Int, r: Int, color: Color) {
+        for (dy in -r..r) for (dx in -r..r) if (dx * dx + dy * dy <= r * r) cell(cx + dx, cy + dy, color)
+    }
+
+    /** A name in half-size cells, centred on [cx], top at row [y], with a drop shadow. */
+    private fun nameTag(text: String, cx: Int, y: Int) {
+        val half = pixel / 2
+        var x = cx * 2 - nameWidth(text) / 2
+        val shadow = Color.Black.copy(alpha = 0.7f)
+        val ink = Color(0xFFF4F0E8)
+        for (ch in text) {
+            val glyph = NAME_FONT[ch] ?: NAME_FONT.getValue('I')
+            for (r in glyph.indices) for (c in glyph[r].indices) if (glyph[r][c] == '#') {
+                scope.drawRect(shadow, Offset((x + c + 1) * half, (y * 2 + r + 1) * half), Size(half, half))
+                scope.drawRect(ink, Offset((x + c) * half, (y * 2 + r) * half), Size(half, half))
+            }
+            x += glyph[0].length + 1
+        }
+    }
+
     private fun cell(x: Int, y: Int, color: Color) {
         scope.drawRect(color, Offset(x * pixel, y * pixel), Size(pixel, pixel))
     }
 }
 
 private val FIGHT_PIXEL = 6.dp
+/** How long the titan scene runs, in seconds. */
+private const val TITAN_SECONDS = 9.6f
+/** One move in this many turns into the titan scene instead. */
+private const val TITAN_ODDS = 4
 /** The resting sword angle: forward and a little raised. */
 private const val GUARD = 20f
 /** Sword length in cells, grip to tip. */

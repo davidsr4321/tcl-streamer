@@ -24,8 +24,8 @@ const ACTIVITIES = (() => {
       crouch: [...rows.slice(0, -3), rows[rows.length - 1]],
     };
   };
-  const DARK = pal(["...HHHHHH...","..HHHHHHHH..","..HHHHHHHH..","..HSSSSSSH..","..SESSSSES..",".sSSSSSSSSs.","..BSSssSSB..","..BBBBBBBB..","..BBBSSBBB..","...BBBBBB...","....SSSS....",".TTTTTTTTTT.","TTTTTTTTTTTT","TTTTTTTTTTTT","STTTTTTTTTTS","S.TTTTTTTT.S","..PPPPPPPP..","..PPP..PPP..","..PPP..PPP..","..KKK..KKK.."], "H", "T", "P", 17);
-  const GINGER = pal(["..r.RR.rR...","..RRRRRRRR..",".RRrRRRRrRR.","..RSSSSSSR..","..SESSSSES..",".sSFSSSSFSs.","..bSSssSSb..","..bSbbbbSb..","..bbbSSbbb..","...bbbbbb...","....SSSS....",".DDDDDDDDDD.","DDDDDDDDDDDD","SDDDDDDDDDDS","S.DDDDDDDD.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "R", "D", "J", 7);
+  const DAVID = pal(["...HHHHHH...","..HHHHHHHH..","..HHHHHHHH..","..HSSSSSSH..","..SESSSSES..",".sSSSSSSSSs.","..BSSssSSB..","..BBBBBBBB..","..BBBSSBBB..","...BBBBBB...","....SSSS....",".TTTTTTTTTT.","TTTTTTTTTTTT","TTTTTTTTTTTT","STTTTTTTTTTS","S.TTTTTTTT.S","..PPPPPPPP..","..PPP..PPP..","..PPP..PPP..","..KKK..KKK.."], "H", "T", "P", 17);
+  const DOR = pal(["..r.RR.rR...","..RRRRRRRR..",".RRrRRRRrRR.","..RSSSSSSR..","..SESSSSES..",".sSFSSSSFSs.","..bSSssSSb..","..bSbbbbSb..","..bbbSSbbb..","...bbbbbb...","....SSSS....",".DDDDDDDDDD.","DDDDDDDDDDDD","SDDDDDDDDDDS","S.DDDDDDDD.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "R", "D", "J", 7);
   // Long curly chestnut hair, round gold glasses, black tee, jeans.
   const SHIR = pal(["...LLLLLL...","..LLlLLlLL..",".LLSSSSSSLL.",".LGGGSSGGGL.",".LGEgGGgEGL.",".LGGGSSGGGL.","LLSSSssSSSLL","LLLSSmmSSLLL","LLL.SSSS.LLL","LLLNNNNNNLLL","LLNNNNNNNNLL","LLNNNNNNNNLL","SLNNNNNNNNLS","S.NNNNNNNN.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "L", "N", "J", 13);
   // Big curly hair, thick dark round glasses, beard, a stud earring, brown polo with a cream collar.
@@ -38,7 +38,19 @@ const ACTIVITIES = (() => {
   const BAR = pal(["...HHHHHH...","..HHHHHHHH..","..HHHHHHHH..","..HSSSSSSH..","..SESSSSES..",".sSSSSSSSSs.","..BSSssSSB..","..BBBBBBBB..","..BBSWWSBB..","...BBBBBB...","....SSSS....",".YYYYYYYYYY.","YYYYYYYYYYYY","YYYYYYYYYYYY","SYYYYYYYYYYS","S.YYYYYYYY.S","..UUUUUUUU..","..UUU..UUU..","..SSS..SSS..","..KKK..KKK.."], "H", "Y", "U", 15);
   // Wavy sandy-brown hair, stubble, black NYC tee, black shorts, white sneakers.
   const ROI = pal(["...VVvVVV...","..VVVVVvVV..",".VVvVVVVVVV.","..VSSSSSSV..","..SESSSSES..",".sSSSSSSSSs.","..SSSssSSS..","..sSSSSSSs..","...sSWWSs...","....sSSs....","....SSSS....",".NNNNNNNNNN.","NNNNNNNNNNNN","NNNWWWNNNNNN","SNNNNNNNNNNS","S.NNNNNNNN.S","..kkkkkkkk..","..kkk..kkk..","..SSS..SSS..","..WWW..WWW.."], "V", "N", "k", 21);
+  const PEOPLE = { DAVID, DOR, SHIR, ITAI, NAOMI, AFIK, BAR, ROI };
+  for (const [n, p] of Object.entries(PEOPLE)) p.name = n;
   const SKIN = PALETTE.S;
+
+  // A 5-pixel-tall font for the name labels under each character.
+  const FONT = {
+    A: [".#.", "#.#", "###", "#.#", "#.#"], B: ["##.", "#.#", "##.", "#.#", "##."], D: ["##.", "#.#", "#.#", "#.#", "##."],
+    F: ["###", "#..", "##.", "#..", "#.."], H: ["#.#", "#.#", "###", "#.#", "#.#"], I: ["#", "#", "#", "#", "#"],
+    K: ["#.#", "#.#", "##.", "#.#", "#.#"], M: ["#...#", "##.##", "#.#.#", "#...#", "#...#"], N: ["#..#", "##.#", "#.##", "#..#", "#..#"],
+    O: [".#.", "#.#", "#.#", "#.#", ".#."], R: ["##.", "#.#", "##.", "#.#", "#.#"], S: [".##", "#..", ".#.", "..#", "##."],
+    T: ["###", ".#.", ".#.", ".#.", ".#."], V: ["#.#", "#.#", "#.#", "#.#", ".#."],
+  };
+  const textWidth = (t) => [...t].reduce((w, ch) => w + (FONT[ch] || FONT.I)[0].length + 1, -1);
 
   // ---- Drawing helpers. One canvas unit is one scene pixel. ----
   function kit(ctx) {
@@ -72,9 +84,27 @@ const ACTIVITIES = (() => {
           if (color) px(x + c, y + r, color);
         }
       });
+      // Every character wears a small name tag under them; o.label moves it ({dx, dy}) or hides it (false).
+      if (o.label !== false && p.name) {
+        const at = o.label || {};
+        labels.push([p.name, x + 6 + (at.dx || 0), y + (o.upTo ?? rows.length) + 1 + (at.dy || 0)]);
+      }
     };
     const hand = (x, y) => rect(x, y, 1, 2, SKIN);
-    return { ctx, rect, px, line, disc, sprite, person, hand };
+    // A name centred on cx with its top at y, light letters with a dark drop shadow.
+    const label = (text, cx, y, color = "#f4f0e8") => {
+      let x = Math.round(cx - textWidth(text) / 2);
+      for (const ch of text) {
+        const glyph = FONT[ch] || FONT.I;
+        glyph.forEach((l, r) => [...l].forEach((b, c) => { if (b === "#") { px(x + c + 1, y + r + 1, "rgba(0,0,0,0.65)"); } }));
+        glyph.forEach((l, r) => [...l].forEach((b, c) => { if (b === "#") px(x + c, y + r, color); }));
+        x += glyph[0].length + 1;
+      }
+    };
+    // Name tags go on last, over any furniture in front of the characters.
+    const labels = [];
+    const flushLabels = () => labels.forEach(l => label(...l));
+    return { ctx, rect, px, line, disc, sprite, person, hand, label, flushLabels };
   }
 
   function rng(seed) {
@@ -118,9 +148,9 @@ const ACTIVITIES = (() => {
     for (const [x, y] of [[141, 46], [143, 44], [145, 46], [142, 48], [144, 47], [146, 45], [140, 47], [143, 42]]) g.px(x, y, "#4e8a46");
     // Couch back, the two of them, then the cushions in front.
     g.rect(158, 41, 60, 13, "#2f4a62"); g.rect(158, 41, 60, 1, "#3e6080"); g.rect(187, 42, 1, 11, "#27405a");
-    g.person(DARK, 166, 38, f, { upTo: DARK.waist, hands: "L" });
+    g.person(DAVID, 166, 38, f, { upTo: DAVID.waist, hands: "L" });
     const reach = f >= 6 && f <= 15;
-    g.person(GINGER, 196, 39, f, { upTo: GINGER.waist, hands: reach ? "R" : "LR", map: (ch, r, c, col) => (r === 8 && (c === 5 || c === 6) && (f === 13 || f === 15)) ? PALETTE.s : col });
+    g.person(DOR, 196, 39, f, { upTo: DOR.waist, hands: reach ? "R" : "LR", map: (ch, r, c, col) => (r === 8 && (c === 5 || c === 6) && (f === 13 || f === 15)) ? PALETTE.s : col });
     // Dark-hair holds the remote.
     g.hand(177, 52); g.rect(178, 51, 1, 3, "#1a1a1e"); if (f % 8 < 2) g.px(178, 50, "#ff4040");
     // The popcorn bowl, and Ginger dipping into it.
@@ -149,8 +179,8 @@ const ACTIVITIES = (() => {
     // A tree to sit under, with fireflies.
     g.rect(226, 28, 4, 30, "#4a3220"); g.disc(228, 22, 11, "#2f5a2c"); g.disc(224, 18, 5, "#3a6a34"); g.disc(233, 24, 4, "#3a6a34");
     for (const [x, y, on] of [[214, 30, 0], [236, 36, 8], [220, 40, 16]]) if ((f - on + 24) % 24 < 8) g.px(x, y, "#e8f07a");
-    g.person(DARK, 164, 38, f, { upTo: DARK.waist, hands: f < 12 ? "L" : "LR", map: (ch, r, c, col) => (r === 8 && (c === 5 || c === 6) && (f === 6 || f === 8)) ? PALETTE.s : col });
-    g.person(GINGER, 196, 39, f, { upTo: GINGER.waist, hands: f >= 12 ? "R" : "LR", map: (ch, r, c, col) => (r === 8 && (c === 5 || c === 6) && (f === 18 || f === 20)) ? PALETTE.s : col });
+    g.person(DAVID, 164, 38, f, { upTo: DAVID.waist, hands: f < 12 ? "L" : "LR", map: (ch, r, c, col) => (r === 8 && (c === 5 || c === 6) && (f === 6 || f === 8)) ? PALETTE.s : col });
+    g.person(DOR, 196, 39, f, { upTo: DOR.waist, hands: f >= 12 ? "R" : "LR", map: (ch, r, c, col) => (r === 8 && (c === 5 || c === 6) && (f === 18 || f === 20)) ? PALETTE.s : col });
     // Picnic table with a checked cloth.
     g.rect(156, 54, 60, 2, "#8a5a32");
     for (let x = 156; x < 216; x += 2) g.rect(x, 54, 1, 4, ((x / 2) % 2) ? "#c84040" : "#f0e8e0");
@@ -199,8 +229,8 @@ const ACTIVITIES = (() => {
       g.rect(x, 54, 22, 5, "#7a3636"); g.rect(x - 1, 59, 2, 2, "#1a1210"); g.rect(x + 21, 59, 2, 2, "#1a1210");
     };
     chairBack(161); chairBack(193);
-    g.person(DARK, 166, 38, f, { upTo: DARK.waist, hands: "" });
-    g.person(GINGER, 198, 39, f, { upTo: GINGER.waist, hands: "" });
+    g.person(DAVID, 166, 38, f, { upTo: DAVID.waist, hands: "" });
+    g.person(DOR, 198, 39, f, { upTo: DOR.waist, hands: "" });
     // Open books held up in both hands; each turns a page now and then.
     const book = (x, cover, flipAt) => {
       g.rect(x, 49, 7, 5, cover); g.rect(x + 1, 49, 5, 4, "#f0e8d8"); g.rect(x + 3, 49, 1, 4, "#c8bca8");
@@ -240,8 +270,8 @@ const ACTIVITIES = (() => {
     g.rect(118, 14, 14, 18, "#1c2a40"); g.disc(125, 21, 3, "#e3b341"); g.rect(120, 27, 10, 1, "#79c0ff"); g.rect(121, 29, 8, 1, "#79c0ff");
     g.rect(0, 58, W, 17, "#1e1a22");
     for (const y of [63, 70]) g.rect(0, y, W, 1, "#19151c");
-    g.person(DARK, 162, 38, f, { upTo: DARK.waist, hands: "" });
-    g.person(GINGER, 202, 39, f, { upTo: GINGER.waist, hands: "" });
+    g.person(DAVID, 162, 38, f, { upTo: DAVID.waist, hands: "" });
+    g.person(DOR, 202, 39, f, { upTo: DOR.waist, hands: "" });
     // Screen light on their faces.
     g.rect(164, 41, 8, 7, "rgba(120,200,255,0.10)"); g.rect(204, 42, 8, 7, "rgba(120,200,255,0.10)");
     // The desk, two laptops seen from behind, and hands busy on the keys.
@@ -275,7 +305,7 @@ const ACTIVITIES = (() => {
     for (let i = 0; i < 26; i++) { const x = Math.floor(rnd() * 200); g.px(x, 57, ["#e85a6a", "#f2d23a", "#f0a0d0", "#ffffff"][i % 4]); g.px(x, 58, "#2e5a28"); }
     // Dark-hair crouches to stroke a grey cat, which purrs out hearts.
     const strokeX = 171 + tri(f, 12);
-    g.person(DARK, 156, 41, f, { rows: DARK.crouch, hands: "L" });
+    g.person(DAVID, 156, 41, f, { rows: DAVID.crouch, hands: "L" });
     g.rect(168, 54, strokeX - 168, 1, SKIN); g.rect(strokeX, 53, 2, 2, SKIN);
     const happy = true;
     g.rect(166, 57, 18, 1, "rgba(0,0,0,0.25)");
@@ -289,14 +319,15 @@ const ACTIVITIES = (() => {
     g.rect(strokeX, 53, 2, 2, SKIN); g.rect(168, 54, strokeX - 168, 1, SKIN);
     for (const s of [0, 12]) { const t = (f + 24 - s) % 24; if (t < 12) heart(g, 176 + (s ? 4 : 0), 49 - Math.floor(t * 0.75), `rgba(255,107,138,${1 - t / 12})`); }
     // Ginger cradles a kitten.
-    g.person(GINGER, 190, 40, f);
+    g.person(DOR, 190, 40, f);
     const kTail = f % 6 < 3;
     g.sprite([".....o.o", "o....ooo", ".ooooooe", ".ooooooo", "..o..o.."], 192, 50, { o: "#e0903a", e: "#2a1a12" });
     g.px(194, 51, "#c06a20"); g.px(196, 51, "#c06a20");
     g.px(192, kTail ? 49 : 51, "#e0903a");
   };
 
-  A.hiking = (g, f) => {
+  // Peaks, pines and a trail sliding by, shared by the hike and the road trip.
+  const trail = (g, f) => {
     cloud(g, 120, 10, 18); cloud(g, 200, 6, 24);
     // Snowy peaks, a pine ridge, and the trail sliding by.
     const peak = (cx, top, half, c1, c2) => {
@@ -316,21 +347,107 @@ const ACTIVITIES = (() => {
       g.rect(sx(3), 60, 2, 1, "#7a6650"); g.rect(sx(15), 66, 3, 1, "#7a6650"); g.px(sx(9), 63, "#4a3828");
       g.px(sx(9), 55, "#4e7a3e"); g.px(sx(20), 55, "#4e7a3e"); g.px(sx(21), 54, "#4e7a3e");
     }
+  };
+
+  A.hiking = (g, f) => {
+    trail(g, f);
     const step = Math.floor(f / 3) % 2;
     const walker = (p, x, y, pack, cap) => {
       g.rect(x + 1, y + 9, 10, 3, pack);
       g.person(p, x, y, f, { rows: step ? p.walkB : p.walkA, cap });
       g.rect(x + 3, y + 11, 1, 4, "#3a2418"); g.rect(x + 8, y + 11, 1, 4, "#3a2418");
     };
-    walker(DARK, 165, 38, "#b05a2a", { rows: [0, 1], color: "#c8b080" });
+    walker(DAVID, 165, 38, "#b05a2a", { rows: [0, 1], color: "#c8b080" });
     g.rect(165, 40, 12, 1, "#b8a070");
-    walker(GINGER, 192, 40, "#2a6a8a");
+    walker(DOR, 192, 40, "#2a6a8a");
     // Ginger's walking pole swings with the step.
     g.line(204, 53, 205 + step, 58, "#8a6a4a");
     // Birds flapping high up.
     for (const [x, y, s] of [[150, 14, 0], [158, 18, 2]]) {
       if ((f + s) % 4 < 2) { g.px(x, y, "#1a1a20"); g.px(x + 1, y + 1, "#1a1a20"); g.px(x + 2, y, "#1a1a20"); }
       else { g.px(x, y + 1, "#1a1a20"); g.px(x + 1, y, "#1a1a20"); g.px(x + 2, y + 1, "#1a1a20"); }
+    }
+  };
+
+  // A road trip with Itai, who walks along strumming his guitar.
+  A.travel = (g, f) => {
+    trail(g, f);
+    const step = Math.floor(f / 3) % 2;
+    const walker = (p, x, y, pack, o = {}) => {
+      if (pack) g.rect(x + 1, y + 9, 10, 3, pack);
+      g.person(p, x, y, f, { rows: step ? p.walkB : p.walkA, ...o });
+      if (pack) { g.rect(x + 3, y + 11, 1, 4, "#3a2418"); g.rect(x + 8, y + 11, 1, 4, "#3a2418"); }
+    };
+    walker(DAVID, 146, 38, "#b05a2a");
+    walker(DOR, 172, 40, "#2a6a8a");
+    // Itai: guitar slung across, left hand on the frets, right hand strumming.
+    const x = 202, y = 38;
+    walker(ITAI, x, y, null, { hands: "" });
+    g.line(x + 6, y + 13, x + 1, y + 9, "#5a3a1a"); g.rect(x, y + 8, 2, 1, "#3a2010");
+    g.rect(x + 6, y + 12, 4, 5, "#c07830"); g.rect(x + 5, y + 13, 6, 3, "#c07830"); g.rect(x + 7, y + 14, 2, 1, "#3a2010");
+    g.rect(x + 6, y + 12, 4, 1, "#d8984a");
+    g.rect(x + 2, y + 10, 1, 2, SKIN);
+    g.rect(x + 10, y + 12 + (f % 2), 1, 2, SKIN);
+    // Notes drifting up from the guitar, three at a time.
+    const note = [".##", ".#.", ".#.", "##."];
+    for (let k = 0; k < 3; k++) {
+      const age = (f + k * 8) % 24;
+      const nx = x + 12 + Math.round(age / 3) + (k === 1 ? 3 : 0), ny = y + 8 - Math.round(age * 0.9);
+      g.sprite(note, nx, ny, { "#": `rgba(255,236,170,${(1 - age / 24).toFixed(2)})` });
+    }
+    // Dor drums on his straps and David bobs along to the beat.
+    if (f % 6 < 3) { g.px(171, 52, SKIN); g.px(158, 50, SKIN); }
+  };
+
+  // The N12 newsroom: Naomi and Afik read the news, Roi does the weather, Bar films it all.
+  // Halfway through the loop the studio breaks into a dance party.
+  A.news = (g, f) => {
+    const party = f >= 24, bounce = party && f % 6 < 3 ? -1 : 0;
+    wall(g, 0.62);
+    for (let x = 0; x < W; x += 10) g.rect(x, 0, 1, 58, "rgba(255,255,255,0.03)");
+    // The big studio screen with a turning globe.
+    g.rect(176, 8, 40, 26, "#10141c"); g.rect(178, 10, 36, 22, "#1a3a6a");
+    g.disc(196, 21, 8, "#2a6ab0");
+    const spin = Math.floor(f / 2) % 6;
+    for (const [dx, dy, w] of [[-5, -3, 4], [1, 0, 5], [-3, 3, 3], [2, -5, 2]]) {
+      const gx = 196 + ((dx + spin + 8) % 16) - 8;
+      if (Math.abs(gx - 196) < 7) g.rect(gx, 21 + dy, Math.min(w, 203 - gx), 2, "#4a9a5a");
+    }
+    // The weather map, with a sun that clouds over and rains.
+    g.rect(140, 14, 30, 22, "#10141c"); g.rect(141, 15, 28, 20, "#3a7ab8");
+    g.rect(146, 19, 8, 6, "#5aa060"); g.rect(150, 24, 10, 7, "#5aa060"); g.rect(158, 18, 6, 5, "#5aa060");
+    if (f % 24 < 12) { g.disc(162, 27, 2, "#ffd23f"); }
+    else { g.rect(159, 25, 7, 3, "#e8eef4"); g.rect(160, 24, 4, 1, "#e8eef4"); for (const dx of [0, 3, 6]) g.px(159 + dx, 29 + (f % 2), "#9ad0ff"); }
+    // Floor, and the news desk.
+    g.rect(0, 58, W, 17, "#24202c"); g.rect(0, 57, W, 1, "#3a3446");
+    g.person(NAOMI, 177, 34 + bounce, f, { upTo: NAOMI.waist, hands: party ? "LR" : "" , map: (ch, r, c, col) => (!party && ch === "m" && f % 4 < 2) ? "#6a2a2a" : col });
+    g.person(AFIK, 202, 35 + (party && f % 6 >= 3 ? -1 : 0), f, { upTo: AFIK.waist, hands: party ? "LR" : "", map: (ch, r, c, col) => (ch === "M" && f % 24 >= 16 && f % 2) ? "#6a1a1a" : col });
+    if (!party) { const py = 47 - (f % 8 < 2 ? 1 : 0); g.rect(205, py, 6, 2, "#f4f0e8"); g.rect(204, py + 1, 1, 1, SKIN); g.rect(211, py + 1, 1, 1, SKIN); }
+    g.rect(176, 47, 40, 11, "#1c2c4c"); g.rect(176, 47, 40, 1, "#3c5c8c"); g.rect(176, 52, 40, 1, "#c03030");
+    // Roi points at the map; in the party he waves both arms.
+    const rx = 154;
+    g.person(ROI, rx, 38 + bounce, f, { hands: party ? "" : "R" });
+    if (!party) { g.line(rx, 49, rx - 3, 45, SKIN); }
+    else { const up = f % 6 < 3; g.rect(rx - 1, 44 + bounce + (up ? 0 : 3), 1, 3, SKIN); g.rect(rx + 12, 44 + bounce + (up ? 3 : 0), 1, 3, SKIN); }
+    // Bar films with a shoulder camera; the red light blinks.
+    const bx = 226, tilt = party && f % 6 < 3 ? 1 : 0;
+    g.person(BAR, bx, 38, f, { hands: "R" });
+    g.rect(216, 41 + tilt, 11, 5, "#3a3a44"); g.rect(214, 42 + tilt, 2, 3, "#16161c"); g.px(214, 42 + tilt, "#8ab0d8");
+    g.rect(219, 39 + tilt, 5, 2, "#2a2a32"); if (f % 12 < 6) g.px(225, 40 + tilt, "#ff3030");
+    // The ticker along the bottom.
+    g.rect(0, 67, W, 8, "#14182a"); g.rect(140, 67, 22, 8, "#c02a2a");
+    for (let i = 0; i < 8; i++) { const tx = 162 + ((i * 14 - f * 2) % 112 + 112) % 112; if (tx < 236) g.rect(tx, 70, 8 + (i % 3) * 2, 2, party ? `hsl(${(i * 45 + f * 15) % 360},80%,65%)` : "#c8cede"); }
+    g.rect(143, 70, 16, 2, "#f4f0e8");
+    if (party) {
+      // A disco ball, coloured spotlights and confetti.
+      g.line(196, 0, 196, 3, "#888"); g.disc(196, 6, 3, "#c8cede");
+      for (let i = 0; i < 4; i++) g.px(194 + ((f + i * 3) % 5), 4 + ((f + i) % 4), "#ffffff");
+      const rnd = rng(77);
+      for (let i = 0; i < 28; i++) {
+        const cx = 140 + Math.floor(rnd() * 100), speed = 1 + Math.floor(rnd() * 2), c = `hsl(${Math.floor(rnd() * 360)},85%,65%)`;
+        g.px(cx + ((f >> 1) % 2), Math.floor(rnd() * 60 + (f - 24) * speed) % 62, c);
+      }
+      g.rect(0, 0, W, 67, `hsla(${(f * 30) % 360},80%,60%,0.08)`);
     }
   };
 
@@ -359,8 +476,8 @@ const ACTIVITIES = (() => {
       const hy = y + dy + p.hand;
       g.hand(x, hy + (stride ? -2 : 1)); g.hand(x + 11, hy + (stride ? 1 : -2));
     };
-    run(DARK, 168, 41, f, "#d04040");
-    run(GINGER, 194, 43, f + 2, "#f0f0f0");
+    run(DAVID, 168, 41, f, "#d04040");
+    run(DOR, 194, 43, f + 2, "#f0f0f0");
     // Speed lines and a drop of sweat.
     for (const [y, o] of [[46, 0], [51, 2], [56, 1]]) if ((f + o) % 3) g.rect(154 + (f + o) % 4, y, 8, 1, "rgba(255,255,255,0.3)");
     if (f % 12 < 6) g.px(206, 45 + f % 6, "#9ad8ff");
@@ -395,8 +512,8 @@ const ACTIVITIES = (() => {
       };
       arm(phase < 12 ? 1 : -1);
     };
-    swim(DARK, 160, f, "#3ab0e0");
-    swim(GINGER, 196, f + 6, "#f2d23a");
+    swim(DAVID, 160, f, "#3ab0e0");
+    swim(DOR, 196, f + 6, "#f2d23a");
     // A beach ball bobbing, and a gull.
     const by = 45 + (Math.floor(f / 8) % 2);
     g.disc(226, by, 2, "#f0f0f0"); g.rect(224, by, 5, 1, "#e04040"); g.px(226, by - 2, "#3a7ad8"); g.px(226, by + 2, "#3a7ad8");
@@ -421,14 +538,14 @@ const ACTIVITIES = (() => {
     const side = f < 12 ? -1 : 1;
     const cy = 16 + (f < 12 ? 0 : 1), cx = 196;
     g.line(201, 5, 202, cy + 15, "#e0c040");
-    g.person(DARK, cx, cy, f, { back: true, hands: side < 0 ? "R" : "L", rows: f % 12 < 6 ? DARK.walkA : DARK.walkB, cap: { rows: [0, 1], color: "#e04040" } });
+    g.person(DAVID, cx, cy, f, { back: true, hands: side < 0 ? "R" : "L", rows: f % 12 < 6 ? DAVID.walkA : DAVID.walkB, cap: { rows: [0, 1], color: "#e04040" } });
     const ax = side < 0 ? cx : cx + 11;
     g.rect(ax, cy + 7, 1, 5, PALETTE.T); g.rect(ax + side, cy + 4, 1, 3, SKIN);
     g.px(cx + 10, cy + 16, "#f0f0f0");
     // Ginger belays from the ground, hands working the rope.
     const by = 40;
     g.line(201, 5, 189, by + 13, "#e0c040");
-    g.person(GINGER, 178, by, f, { hands: "L", cap: { rows: [0, 1], color: "#f2d23a" } });
+    g.person(DOR, 178, by, f, { hands: "L", cap: { rows: [0, 1], color: "#f2d23a" } });
     const pull = Math.floor(f / 6) % 2;
     g.hand(189, by + 12 + pull);
     // A pebble skitters down.
@@ -454,8 +571,8 @@ const ACTIVITIES = (() => {
     };
     const lap = (f / 48) * Math.PI * 2;
     const runners = [
-      { p: DARK, a: lap, chased: true },
-      { p: GINGER, a: lap - 0.55, chased: true },
+      { p: DAVID, a: lap, chased: true },
+      { p: DOR, a: lap - 0.55, chased: true },
       { p: SHIR, a: lap - 1.45, chased: false },
     ].map(r => ({ ...r, depth: Math.sin(r.a) }));
     const draw = (r) => {
@@ -484,7 +601,7 @@ const ACTIVITIES = (() => {
     tree();
     front.forEach(r => at.set(r.p, draw(r)));
     // Ginger keeps glancing back: a little "!" pops up now and then.
-    const gp = at.get(GINGER);
+    const gp = at.get(DOR);
     if (f % 16 < 6) { g.rect(gp.x + 5, gp.y - 7, 2, 4, "#ffffff"); g.rect(gp.x + 5, gp.y - 2, 2, 1, "#ffffff"); }
   };
 
@@ -499,6 +616,8 @@ const ACTIVITIES = (() => {
     { id: "running", name: "Running" },
     { id: "swimming", name: "Swimming" },
     { id: "climbing", name: "Climbing" },
+    { id: "travel", name: "Road trip" },
+    { id: "news", name: "Newsroom", frames: 48 },
   ];
 
   // The see-through parts get eight bands of the app's own colour, darkest at the top.
@@ -515,6 +634,6 @@ const ACTIVITIES = (() => {
   }
 
   const framesOf = (id) => LIST.find(a => a.id === id)?.frames ?? FRAMES;
-  return { W, H, FRAMES, LIST, framesOf, PALETTE, PEOPLE: { DARK, GINGER, SHIR, ITAI, NAOMI, AFIK, BAR, ROI }, paint: (ctx, id, f) => A[id](kit(ctx), f), drawSky, skyBands };
+  return { W, H, FRAMES, LIST, framesOf, PALETTE, PEOPLE, paint: (ctx, id, f) => { const g = kit(ctx); A[id](g, f); g.flushLabels(); }, drawSky, skyBands };
 })();
 if (typeof module !== "undefined") module.exports = ACTIVITIES;

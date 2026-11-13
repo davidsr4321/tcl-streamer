@@ -37,6 +37,10 @@ enum class Activity(val asset: String, val indoor: Boolean = false, val frames: 
     RUNNING("running"),
     SWIMMING("swimming"),
     CLIMBING("climbing"),
+    /** The road trip, with Itai on guitar. */
+    TRAVEL("travel"),
+    /** Naomi, Afik, Roi and Bar in the newsroom, then a dance party; 48 frames. */
+    NEWS("news", indoor = true, frames = 48),
 }
 
 /**

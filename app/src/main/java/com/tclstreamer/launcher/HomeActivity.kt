@@ -278,7 +278,7 @@ class HomeActivity : ComponentActivity() {
 
     private companion object {
         /** How long the remote has to sit untouched before the screensaver comes out. */
-        const val IDLE_MS = 60_000L
+        const val IDLE_MS = 4_000L
         const val UPDATE_CHECK_MS = 3 * 60 * 60 * 1000L
         const val WEATHER_CHECK_MS = 30 * 60 * 1000L
         const val WATCHING_CHECK_MS = 5 * 60 * 1000L

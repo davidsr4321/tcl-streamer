@@ -2,11 +2,11 @@ package com.tclstreamer.launcher
 
 import androidx.compose.ui.graphics.Color
 
-// The two friends as pixel sprites, shared by the sword-fight screensaver. One letter is one
+// The two friends, David and Dor, as pixel sprites, shared by the sword-fight screensaver. One letter is one
 // pixel, coloured through PALETTE; '.' is see-through.
 
 /** One character: a standing pose, plus blink and two walking frames built from it. */
-internal class Pal(val stand: List<String>) {
+internal class Pal(val name: String, val stand: List<String>) {
     private val pants = stand[stand.size - 3][2]
     val blink = stand.mapIndexed { i, line -> if (i == EYE_ROW) line.replace('E', 's') else line }
     val walkA = stand.dropLast(2) + "..$pants$pants$pants...$pants$pants.." + ".KKKK...KK.."
@@ -40,8 +40,9 @@ internal val PALETTE = mapOf(
     'J' to Color(0xFF3D4F6E), // jeans
 )
 
-/** Dark hair, full beard, lavender tee. */
-internal val DARK = Pal(
+/** David: dark hair, full beard, lavender tee. */
+internal val DAVID = Pal(
+    "DAVID",
     listOf(
         "...HHHHHH...",
         "..HHHHHHHH..",
@@ -66,8 +67,9 @@ internal val DARK = Pal(
     )
 )
 
-/** Ginger curls, freckles, ginger beard, green tee. A little shorter. */
-internal val GINGER = Pal(
+/** Dor: ginger curls, freckles, ginger beard, green tee. A little shorter. */
+internal val DOR = Pal(
+    "DOR",
     listOf(
         "..r.RR.rR...",
         "..RRRRRRRR..",
@@ -89,3 +91,24 @@ internal val GINGER = Pal(
         "..KKK..KKK..",
     )
 )
+
+/** A 5-cell-tall font for the name tags under the characters; '#' is lit. */
+internal val NAME_FONT = mapOf(
+    'A' to listOf(".#.", "#.#", "###", "#.#", "#.#"),
+    'B' to listOf("##.", "#.#", "##.", "#.#", "##."),
+    'D' to listOf("##.", "#.#", "#.#", "#.#", "##."),
+    'F' to listOf("###", "#..", "##.", "#..", "#.."),
+    'H' to listOf("#.#", "#.#", "###", "#.#", "#.#"),
+    'I' to listOf("#", "#", "#", "#", "#"),
+    'K' to listOf("#.#", "#.#", "##.", "#.#", "#.#"),
+    'M' to listOf("#...#", "##.##", "#.#.#", "#...#", "#...#"),
+    'N' to listOf("#..#", "##.#", "#.##", "#..#", "#..#"),
+    'O' to listOf(".#.", "#.#", "#.#", "#.#", ".#."),
+    'R' to listOf("##.", "#.#", "##.", "#.#", "#.#"),
+    'S' to listOf(".##", "#..", ".#.", "..#", "##."),
+    'T' to listOf("###", ".#.", ".#.", ".#.", ".#."),
+    'V' to listOf("#.#", "#.#", "#.#", "#.#", ".#."),
+)
+
+/** Width of [text] in font cells, one blank column between letters. */
+internal fun nameWidth(text: String) = text.sumOf { (NAME_FONT[it] ?: NAME_FONT.getValue('I'))[0].length + 1 } - 1
