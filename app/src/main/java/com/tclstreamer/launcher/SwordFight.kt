@@ -620,8 +620,9 @@ private class Stage(
     private fun steam(x: Int, y: Int, w: Int, h: Int, progress: Float) {
         val alpha = (1f - progress).coerceIn(0f, 1f) * 0.85f
         for (i in 0 until 10) {
-            val px = x + (i * 37 % 10) * w / 10
-            val py = y + (i * 53 % 10) * h / 10 - (progress * 6).toInt()
+            val (sx, sy) = STEAM_SPOTS[i]
+            val px = x + sx * w / 10
+            val py = y + sy * h / 10 - (progress * 6).toInt()
             puff(px, py, 2 + (progress * 4).toInt() + i % 2, Color(0xFFE8E8E8).copy(alpha = alpha))
         }
     }
@@ -652,6 +653,8 @@ private class Stage(
 }
 
 private val FIGHT_PIXEL = 6.dp
+/** Where the steam puffs sit, in tenths of the width and height of what is steaming. */
+private val STEAM_SPOTS = listOf(1 to 2, 8 to 1, 4 to 0, 0 to 6, 9 to 5, 5 to 4, 2 to 9, 7 to 8, 3 to 3, 6 to 7)
 /** How long the titan scene runs, in seconds. */
 private const val TITAN_SECONDS = 9.6f
 /** One move in this many turns into the titan scene instead. */

@@ -634,6 +634,6 @@ const ACTIVITIES = (() => {
   }
 
   const framesOf = (id) => LIST.find(a => a.id === id)?.frames ?? FRAMES;
-  return { W, H, FRAMES, LIST, framesOf, PALETTE, PEOPLE, paint: (ctx, id, f) => { const g = kit(ctx); A[id](g, f); g.flushLabels(); }, drawSky, skyBands };
+  return { W, H, FRAMES, LIST, framesOf, PALETTE, PEOPLE, FONT, paint: (ctx, id, f) => { const g = kit(ctx); A[id](g, f); g.flushLabels(); }, drawSky, skyBands };
 })();
 if (typeof module !== "undefined") module.exports = ACTIVITIES;
