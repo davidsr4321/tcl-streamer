@@ -9,19 +9,35 @@ const ACTIVITIES = (() => {
     H: "#2b1d16", B: "#3a2418", T: "#a98bd8", P: "#2c3340",
     R: "#d9783a", r: "#f0a060", F: "#c47a58", b: "#c0602c", D: "#4f7a4a", J: "#3d4f6e",
     L: "#5a3424", l: "#7a4a30", G: "#b08a3a", g: "#e8f0f8", m: "#c8706a", N: "#1c1c24",
+    h: "#4a3426", Q: "#3a2214", O: "#7a5236", C: "#e6d8b8", A: "#8a5a3a", a: "#a87650",
+    W: "#ecebe6", w: "#bdb9b0", M: "#c42a3a", Y: "#a8a59e", U: "#5a7aa0", V: "#8a6440", v: "#a8804e", k: "#26262e",
   };
-  const pal = (rows, hair, shirt, pants, blinkAt) => ({
-    rows, hair, shirt, pants, blinkAt,
-    waist: rows.findIndex(l => l.includes(pants.repeat(4))),
-    hand: rows.findIndex((l, i) => i >= 10 && l[0] === "S"),
-    walkA: [...rows.slice(0, -2), `..${pants.repeat(3)}...${pants.repeat(2)}..`, ".KKKK...KK.."],
-    walkB: [...rows.slice(0, -2), `..${pants.repeat(2)}...${pants.repeat(3)}..`, "..KK...KKKK."],
-    crouch: [...rows.slice(0, -3), rows[rows.length - 1]],
-  });
+  // The walk frames reuse the bottom two rows' own letters, so shorts keep bare legs and shoes keep their colour.
+  const pal = (rows, hair, shirt, pants, blinkAt) => {
+    const leg = rows[rows.length - 2].replace(/\./g, "")[0], shoe = rows[rows.length - 1].replace(/\./g, "")[0];
+    return {
+      rows, hair, shirt, pants, blinkAt,
+      waist: rows.findIndex(l => l.includes(pants.repeat(4))),
+      hand: rows.findIndex((l, i) => i >= 10 && l[0] === "S"),
+      walkA: [...rows.slice(0, -2), `..${leg.repeat(3)}...${leg.repeat(2)}..`, `.${shoe.repeat(4)}...${shoe.repeat(2)}..`],
+      walkB: [...rows.slice(0, -2), `..${leg.repeat(2)}...${leg.repeat(3)}..`, `..${shoe.repeat(2)}...${shoe.repeat(4)}.`],
+      crouch: [...rows.slice(0, -3), rows[rows.length - 1]],
+    };
+  };
   const DARK = pal(["...HHHHHH...","..HHHHHHHH..","..HHHHHHHH..","..HSSSSSSH..","..SESSSSES..",".sSSSSSSSSs.","..BSSssSSB..","..BBBBBBBB..","..BBBSSBBB..","...BBBBBB...","....SSSS....",".TTTTTTTTTT.","TTTTTTTTTTTT","TTTTTTTTTTTT","STTTTTTTTTTS","S.TTTTTTTT.S","..PPPPPPPP..","..PPP..PPP..","..PPP..PPP..","..KKK..KKK.."], "H", "T", "P", 17);
   const GINGER = pal(["..r.RR.rR...","..RRRRRRRR..",".RRrRRRRrRR.","..RSSSSSSR..","..SESSSSES..",".sSFSSSSFSs.","..bSSssSSb..","..bSbbbbSb..","..bbbSSbbb..","...bbbbbb...","....SSSS....",".DDDDDDDDDD.","DDDDDDDDDDDD","SDDDDDDDDDDS","S.DDDDDDDD.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "R", "D", "J", 7);
   // Long curly chestnut hair, round gold glasses, black tee, jeans.
   const SHIR = pal(["...LLLLLL...","..LLlLLlLL..",".LLSSSSSSLL.",".LGGGSSGGGL.",".LGEgGGgEGL.",".LGGGSSGGGL.","LLSSSssSSSLL","LLLSSmmSSLLL","LLL.SSSS.LLL","LLLNNNNNNLLL","LLNNNNNNNNLL","LLNNNNNNNNLL","SLNNNNNNNNLS","S.NNNNNNNN.S","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "L", "N", "J", 13);
+  // Big curly hair, thick dark round glasses, beard, a stud earring, brown polo with a cream collar.
+  const ITAI = pal(["..hHHhHHhH..",".HHhHHHHhHH.","HHHHhHHhHHHH","HHQQQSSQQQHH","HSQEQQQQEQSH",".sQQQSSQQQs.",".gBSSssSSB..","..BBBBBBBB..","..BBBSSBBB..","...BBBBBB...","....SSSS....",".OOOCCCCOOO.","OOOOOCCOOOOO","OOOOOCCOOOOO","SOOOOOOOOOOS","S.OOOOOOOO.S","..PPPPPPPP..","..PPP..PPP..","..PPP..PPP..","..KKK..KKK.."], "H", "O", "P", 9);
+  // Long straight light-brown hair, white hoodie with drawstrings, jeans.
+  const NAOMI = pal(["...AAAAAA...","..AAaAAAAA..",".AASSSSSSAA.",".ASSSSSSSSA.",".ASESSSSESA.",".AsSSSSSSsA.",".AASSSSSSAA.","AAASSmmSSAAA","AAA.SSSS.AAA","AAAWWWWWWAAA","AAWWwWWwWWAA","AAWWwWWwWWAA","SAWWWWWWWWAS","S.WWWWWWWW.S","..WWwwwwWW..","..JJJJJJJJ..","..JJJ..JJJ..","..KKK..KKK.."], "A", "W", "J", 19);
+  // Long dark wavy hair, red lipstick, black top, flared jeans.
+  const AFIK = pal(["...HHHHHH...","..HHHHhHHH..",".HHSSSSSSHH.",".HSSSSSSSSH.",".HSESSSSESH.","HHsSSSSSSsHH","HhSSSSSSSShH","HHHSSMMSSHHH","HhH.SSSS.HhH","HHHNNNNNNHHH","HhNNNNNNNNhH","HHNNNNNNNNHH","SHNNNNNNNNHS","S.NNNNNNNN.S","..JJJJJJJJ..","..JJJ..JJJ..",".KKKK..KKKK."], "H", "N", "J", 3);
+  // Short dark hair, full beard, grey tee, denim shorts.
+  const BAR = pal(["...HHHHHH...","..HHHHHHHH..","..HHHHHHHH..","..HSSSSSSH..","..SESSSSES..",".sSSSSSSSSs.","..BSSssSSB..","..BBBBBBBB..","..BBSWWSBB..","...BBBBBB...","....SSSS....",".YYYYYYYYYY.","YYYYYYYYYYYY","YYYYYYYYYYYY","SYYYYYYYYYYS","S.YYYYYYYY.S","..UUUUUUUU..","..UUU..UUU..","..SSS..SSS..","..KKK..KKK.."], "H", "Y", "U", 15);
+  // Wavy sandy-brown hair, stubble, black NYC tee, black shorts, white sneakers.
+  const ROI = pal(["...VVvVVV...","..VVVVVvVV..",".VVvVVVVVVV.","..VSSSSSSV..","..SESSSSES..",".sSSSSSSSSs.","..SSSssSSS..","..sSSSSSSs..","...sSWWSs...","....sSSs....","....SSSS....",".NNNNNNNNNN.","NNNNNNNNNNNN","NNNWWWNNNNNN","SNNNNNNNNNNS","S.NNNNNNNN.S","..kkkkkkkk..","..kkk..kkk..","..SSS..SSS..","..WWW..WWW.."], "V", "N", "k", 21);
   const SKIN = PALETTE.S;
 
   // ---- Drawing helpers. One canvas unit is one scene pixel. ----
@@ -499,6 +515,6 @@ const ACTIVITIES = (() => {
   }
 
   const framesOf = (id) => LIST.find(a => a.id === id)?.frames ?? FRAMES;
-  return { W, H, FRAMES, LIST, framesOf, paint: (ctx, id, f) => A[id](kit(ctx), f), drawSky, skyBands };
+  return { W, H, FRAMES, LIST, framesOf, PALETTE, PEOPLE: { DARK, GINGER, SHIR, ITAI, NAOMI, AFIK, BAR, ROI }, paint: (ctx, id, f) => A[id](kit(ctx), f), drawSky, skyBands };
 })();
 if (typeof module !== "undefined") module.exports = ACTIVITIES;
